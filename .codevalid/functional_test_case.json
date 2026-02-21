@@ -1,0 +1,2689 @@
+{
+  "function": [
+    {
+      "implementation_id": "frontend_api_todo_methods",
+      "test_cases": [
+        {
+          "description": "Verify that creating a todo with a valid title, description, notes, and expiry_date succeeds and returns the persisted todo.",
+          "id": "create_valid_todo_all_fields",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with All Fields Valid",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "description": "Milk, eggs, bread",
+                "expiry_date": "2024-12-31",
+                "notes": "Buy organic if possible",
+                "title": "Buy groceries"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "description": "Milk, eggs, bread",
+                "expiry_date": "2024-12-31",
+                "id": "generated_id",
+                "notes": "Buy organic if possible",
+                "title": "Buy groceries"
+              },
+              "response_status": 201
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that creating a todo without a title returns an error.",
+          "id": "create_todo_title_missing",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Missing Title",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "description": "No title here",
+                "notes": "Should fail"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "Title is required"
+              },
+              "response_status": 400
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that creating a todo with an empty title returns an error.",
+          "id": "create_todo_title_empty",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Empty Title",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "description": "Empty title",
+                "notes": "Should fail",
+                "title": ""
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "Title cannot be empty"
+              },
+              "response_status": 400
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that creating a todo with only the required title succeeds, and optional fields are null or absent.",
+          "id": "create_todo_optional_fields_omitted",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Only Title",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "title": "Write report"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "description": null,
+                "expiry_date": null,
+                "id": "generated_id",
+                "notes": null,
+                "title": "Write report"
+              },
+              "response_status": 201
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that creating a todo with an expiry_date not matching 'YYYY-MM-DD' returns an error.",
+          "id": "create_todo_invalid_expiry_date",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Invalid Expiry Date Format",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "expiry_date": "12-31-2024",
+                "title": "Call mom"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "expiry_date must be in 'YYYY-MM-DD' format"
+              },
+              "response_status": 400
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that the list endpoint returns all persisted todos with their fields.",
+          "id": "list_todos_multiple",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "List Todos with Multiple Items",
+          "test_setup": {
+            "given": {
+              "precondition": "Two todos exist: one with all fields, one with only title"
+            },
+            "then": {
+              "response_body_json": [
+                {
+                  "description": "Milk, eggs, bread",
+                  "expiry_date": "2024-12-31",
+                  "id": "id1",
+                  "notes": "Buy organic if possible",
+                  "title": "Buy groceries"
+                },
+                {
+                  "description": null,
+                  "expiry_date": null,
+                  "id": "id2",
+                  "notes": null,
+                  "title": "Write report"
+                }
+              ],
+              "response_status": 200
+            },
+            "when": "todoApi.list() is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that the list endpoint returns an empty array when no todos exist.",
+          "id": "list_todos_empty",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "List Todos When None Exist",
+          "test_setup": {
+            "given": {
+              "precondition": "No todos exist"
+            },
+            "then": {
+              "response_body_json": [],
+              "response_status": 200
+            },
+            "when": "todoApi.list() is called"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Verify that the get endpoint returns the correct todo record for a valid id.",
+          "id": "get_todo_valid_id",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Get Todo with Valid ID",
+          "test_setup": {
+            "given": {
+              "precondition": "Todo with id='id1' exists"
+            },
+            "then": {
+              "response_body_json": {
+                "description": "Milk, eggs, bread",
+                "expiry_date": "2024-12-31",
+                "id": "id1",
+                "notes": "Buy organic if possible",
+                "title": "Buy groceries"
+              },
+              "response_status": 200
+            },
+            "when": "todoApi.get('id1') is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that the get endpoint returns an error when the todo does not exist.",
+          "id": "get_todo_nonexistent_id",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Get Todo with Nonexistent ID",
+          "test_setup": {
+            "given": {
+              "precondition": "No todo with id='notfound'"
+            },
+            "then": {
+              "response_body_json": {
+                "error": "Todo not found"
+              },
+              "response_status": 404
+            },
+            "when": "todoApi.get('notfound') is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that updating a todo with some fields updates only those fields.",
+          "id": "update_todo_some_fields",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Update Todo with Some Fields",
+          "test_setup": {
+            "given": {
+              "precondition": "Todo with id='id1' exists",
+              "request_body_json": {
+                "description": "Milk, eggs, bread, cheese",
+                "notes": "Add cheese"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "description": "Milk, eggs, bread, cheese",
+                "expiry_date": "2024-12-31",
+                "id": "id1",
+                "notes": "Add cheese",
+                "title": "Buy groceries"
+              },
+              "response_status": 200
+            },
+            "when": "todoApi.update('id1', request_body_json) is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that updating a todo with all fields updates them accordingly.",
+          "id": "update_todo_all_fields",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Update Todo with All Fields",
+          "test_setup": {
+            "given": {
+              "precondition": "Todo with id='id2' exists",
+              "request_body_json": {
+                "description": "Include summary",
+                "expiry_date": "2024-07-01",
+                "notes": "Deadline tomorrow",
+                "title": "Write final report"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "description": "Include summary",
+                "expiry_date": "2024-07-01",
+                "id": "id2",
+                "notes": "Deadline tomorrow",
+                "title": "Write final report"
+              },
+              "response_status": 200
+            },
+            "when": "todoApi.update('id2', request_body_json) is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that updating a todo with an invalid expiry_date returns an error.",
+          "id": "update_todo_invalid_expiry_date",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Update Todo with Invalid Expiry Date",
+          "test_setup": {
+            "given": {
+              "precondition": "Todo with id='id1' exists",
+              "request_body_json": {
+                "expiry_date": "01/07/2024"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "expiry_date must be in 'YYYY-MM-DD' format"
+              },
+              "response_status": 400
+            },
+            "when": "todoApi.update('id1', request_body_json) is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that updating a todo with a nonexistent id returns an error.",
+          "id": "update_todo_nonexistent_id",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Update Todo with Nonexistent ID",
+          "test_setup": {
+            "given": {
+              "precondition": "No todo with id='notfound'",
+              "request_body_json": {
+                "title": "Should not work"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "Todo not found"
+              },
+              "response_status": 404
+            },
+            "when": "todoApi.update('notfound', request_body_json) is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that deleting a todo with a valid id succeeds and the todo is no longer accessible.",
+          "id": "delete_todo_valid_id",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Delete Todo with Valid ID",
+          "test_setup": {
+            "given": {
+              "precondition": "Todo with id='id2' exists"
+            },
+            "then": {
+              "postcondition": [
+                "todoApi.get('id2') returns 404",
+                "todoApi.list() does not include todo with id='id2'"
+              ],
+              "response_body_json": null,
+              "response_status": 204
+            },
+            "when": "todoApi.delete('id2') is called"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verify that deleting a todo with a nonexistent id returns an error.",
+          "id": "delete_todo_nonexistent_id",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Delete Todo with Nonexistent ID",
+          "test_setup": {
+            "given": {
+              "precondition": "No todo with id='notfound'"
+            },
+            "then": {
+              "response_body_json": {
+                "error": "Todo not found"
+              },
+              "response_status": 404
+            },
+            "when": "todoApi.delete('notfound') is called"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verify that expiry_date accepts 'YYYY-MM-DD' even for leap years.",
+          "id": "create_todo_expiry_date_edge_leap_year",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Leap Year Expiry Date",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "expiry_date": "2024-02-29",
+                "title": "Leap Day Task"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "description": null,
+                "expiry_date": "2024-02-29",
+                "id": "generated_id",
+                "notes": null,
+                "title": "Leap Day Task"
+              },
+              "response_status": 201
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Verify that expiry_date does not accept invalid leap days for non-leap years.",
+          "id": "create_todo_expiry_date_edge_non_leap_year",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Invalid Leap Day Expiry Date",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "expiry_date": "2023-02-29",
+                "title": "Invalid Leap Day"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "expiry_date is not a valid calendar date"
+              },
+              "response_status": 400
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Verify that creating a todo with a title of 255 characters succeeds.",
+          "id": "create_todo_boundary_title_length_255",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Boundary Title Length (255 chars)",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "title": "T.repeat(255)"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "description": null,
+                "expiry_date": null,
+                "id": "generated_id",
+                "notes": null,
+                "title": "T.repeat(255)"
+              },
+              "response_status": 201
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Verify that creating a todo with a title of 256 characters fails if there is a max-length constraint.",
+          "id": "create_todo_boundary_title_length_256",
+          "implementation_id": "frontend_api_todo_methods",
+          "name": "Create Todo with Title Length Exceeding Boundary (256 chars)",
+          "test_setup": {
+            "given": {
+              "request_body_json": {
+                "title": "T.repeat(256)"
+              }
+            },
+            "then": {
+              "response_body_json": {
+                "error": "Title exceeds maximum length"
+              },
+              "response_status": 400
+            },
+            "when": "todoApi.create(request_body_json) is called"
+          },
+          "type": "edge"
+        }
+      ]
+    }
+  ],
+  "component": [
+    {
+      "implementation_id": "ui_todo_manager_component",
+      "test_cases": [
+        {
+          "description": "Verifies that the component fetches and displays the list of todos when mounted.",
+          "id": "fetch-todos-on-mount",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Fetch todos on component mount",
+          "test_setup": {
+            "given": "The App component is rendered with no todos loaded.",
+            "then": "todoApi.list() is called and the returned todos are displayed with all their fields.",
+            "when": "Component mounts."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Checks that each todo displays title, description, notes, and expiry_date correctly.",
+          "id": "render-todo-fields",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Render all todo fields",
+          "test_setup": {
+            "given": "A list of todos with populated title, description, notes, and expiry_date.",
+            "then": "Each todo shows all fields, with optional fields empty if not set.",
+            "when": "Component renders the todo list."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Ensures that clicking the 'New todo' button displays the creation form.",
+          "id": "show-new-todo-form",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Show form on 'New todo' button click",
+          "test_setup": {
+            "given": "Todos are listed in the App component.",
+            "then": "TodoForm for creation is displayed with empty fields.",
+            "when": "User clicks the 'New todo' button."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests that a todo can be created with only the required title field.",
+          "id": "create-todo-success-required",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with required field only",
+          "test_setup": {
+            "given": "TodoForm is displayed for creation.",
+            "then": "A new todo is created and added to the list, optional fields are null or absent.",
+            "when": "User enters a valid title and submits the form."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Checks creation of a todo with title, description, notes, and a valid expiry_date.",
+          "id": "create-todo-success-all-fields",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with all fields",
+          "test_setup": {
+            "given": "TodoForm is displayed for creation.",
+            "then": "A new todo with all fields populated is added to the list.",
+            "when": "User fills all fields with valid values and submits."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verifies that the form shows an error and prevents creation if title is missing.",
+          "id": "create-todo-missing-title",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with missing title",
+          "test_setup": {
+            "given": "TodoForm is displayed for creation.",
+            "then": "Form shows error message, creation is aborted, and no API call is made.",
+            "when": "User submits the form with an empty title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Checks that submitting an invalid expiry_date string results in a validation error.",
+          "id": "create-todo-invalid-expiry-date",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with invalid expiry_date format",
+          "test_setup": {
+            "given": "TodoForm is displayed for creation.",
+            "then": "Form shows error message, creation is aborted, and no API call is made.",
+            "when": "User enters an invalid expiry_date (e.g., '2023/12/31') and submits."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Checks that clicking edit displays the form pre-filled with the todo's data.",
+          "id": "edit-todo-displays-form",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Edit todo shows form with existing values",
+          "test_setup": {
+            "given": "A todo is listed in the UI.",
+            "then": "TodoForm appears with the todo's current values filled in.",
+            "when": "User clicks the edit button for that todo."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Ensures that updating the title field changes the todo and updates the list.",
+          "id": "update-todo-title",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Update a todo's title",
+          "test_setup": {
+            "given": "TodoForm is open for editing a todo.",
+            "then": "The todo is updated in the list with the new title.",
+            "when": "User changes the title to a new valid value and submits."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Checks that updating description, notes, or expiry_date alone works.",
+          "id": "update-todo-optional-fields",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Update only optional fields",
+          "test_setup": {
+            "given": "TodoForm is open for editing a todo.",
+            "then": "The todo is updated with new values for those fields, others remain unchanged.",
+            "when": "User modifies only optional fields and submits."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests that updating expiry_date to an invalid format is prevented.",
+          "id": "update-todo-invalid-expiry-date",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Update todo with invalid expiry_date",
+          "test_setup": {
+            "given": "TodoForm is open for editing a todo.",
+            "then": "Form shows error message and update is not sent to API.",
+            "when": "User enters expiry_date as '31-12-2023' and submits."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Checks that a todo can be deleted and is removed from the UI after confirmation.",
+          "id": "delete-todo-success",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Delete a todo",
+          "test_setup": {
+            "given": "A todo is listed in the UI.",
+            "then": "todoApi.delete is called, todo is removed from the list, and is not accessible via get or list.",
+            "when": "User clicks the delete button and confirms deletion."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Ensures the UI shows an error if trying to delete a todo that no longer exists.",
+          "id": "delete-todo-nonexistent",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Delete a nonexistent todo",
+          "test_setup": {
+            "given": "A todo was deleted elsewhere and still appears in the UI.",
+            "then": "API returns an error, UI shows error message, and removes the stale todo from list.",
+            "when": "User attempts to delete it."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Checks that trying to view (edit) a todo that does not exist results in an error.",
+          "id": "get-todo-nonexistent",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "View a nonexistent todo",
+          "test_setup": {
+            "given": "A todo has been deleted but the user tries to edit it.",
+            "then": "API get-one returns error, UI displays appropriate error message.",
+            "when": "Edit button is clicked."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Verifies the UI displays an empty state when there are no todos.",
+          "id": "list-todos-empty",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "List todos when none exist",
+          "test_setup": {
+            "given": "The API returns an empty todo list.",
+            "then": "UI displays a message or indicator for no todos found.",
+            "when": "Component renders."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Checks that a title with only whitespace is rejected.",
+          "id": "create-todo-title-whitespace",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with whitespace-only title",
+          "test_setup": {
+            "given": "TodoForm is open for creation.",
+            "then": "Form shows required error for title, todo is not created.",
+            "when": "User enters spaces as title and submits."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Ensures that expiry_date is optional and not sent if left blank.",
+          "id": "expiry-date-null-or-absent",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with expiry_date omitted",
+          "test_setup": {
+            "given": "TodoForm is open for creation.",
+            "then": "Todo is created successfully, expiry_date is null or absent in API.",
+            "when": "User leaves expiry_date blank and submits."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Checks that expiry_date can be set to blank or removed on update.",
+          "id": "update-todo-remove-expiry-date",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Update todo to remove expiry_date",
+          "test_setup": {
+            "given": "A todo with expiry_date exists and is open for editing.",
+            "then": "Todo is updated, expiry_date is null or absent.",
+            "when": "User clears the expiry_date field and submits."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Verifies that updating a todo that does not exist shows an error.",
+          "id": "update-todo-nonexistent",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Update a nonexistent todo",
+          "test_setup": {
+            "given": "A todo was deleted elsewhere and is open for editing.",
+            "then": "API returns error, UI displays error message.",
+            "when": "User submits an update."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Checks that very long values for description/notes are accepted if within backend constraints.",
+          "id": "field-length-boundaries",
+          "implementation_id": "ui_todo_manager_component",
+          "name": "Create todo with maximum field lengths",
+          "test_setup": {
+            "given": "TodoForm is open for creation.",
+            "then": "Todo is created if within limits; otherwise, shows error if backend rejects.",
+            "when": "User enters maximum allowed lengths for description and notes, and submits."
+          },
+          "type": "edge"
+        }
+      ]
+    },
+    {
+      "implementation_id": "ui_todo_form_component",
+      "test_cases": [
+        {
+          "description": "Tests form submission with all fields filled, including valid expiry_date format.",
+          "id": "TC01_create_valid_todo_all_fields",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Create todo with valid title, description, notes, and expiry_date",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "onSave is called with {title: 'Buy milk', description: 'Get from store', notes: 'Check expiry', expiry_date: '2024-07-01'}; no error shown",
+            "when": "User enters 'Buy milk' for title, 'Get from store' for description, 'Check expiry' for notes, and '2024-07-01' for expiry_date, then submits form"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests form submission with only the required title field filled.",
+          "id": "TC02_create_valid_todo_title_only",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Create todo with only required title",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "onSave is called with {title: 'Read book', description: null, notes: null, expiry_date: null}; no error shown",
+            "when": "User enters 'Read book' for title and leaves description, notes, expiry_date empty, then submits form"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests form submission with empty title; expects validation error.",
+          "id": "TC03_create_todo_missing_title",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Create todo with missing title",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "Error message is shown indicating title is required; onSave is NOT called",
+            "when": "User leaves title empty and fills optional fields, then submits form"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Tests form submission with title containing only whitespace; expects validation error.",
+          "id": "TC04_create_todo_empty_title_whitespace",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Create todo with whitespace-only title",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "Error message is shown indicating title is required; onSave is NOT called",
+            "when": "User enters '   ' (spaces) for title and submits form"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Tests form submission with expiry_date not matching 'YYYY-MM-DD'.",
+          "id": "TC05_create_todo_invalid_expiry_date_format",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Create todo with invalid expiry_date format",
+          "test_setup": {
+            "given": "TodoForm rendered with title and onSave handler",
+            "then": "Error message is shown indicating expiry_date format is invalid; onSave is NOT called",
+            "when": "User enters 'Walk dog' for title and '07/01/2024' for expiry_date, then submits form"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Tests form submission with expiry_date left empty.",
+          "id": "TC06_create_todo_expiry_date_empty",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Create todo with empty expiry_date",
+          "test_setup": {
+            "given": "TodoForm rendered with title and onSave handler",
+            "then": "onSave is called with expiry_date as null or absent; no error shown",
+            "when": "User enters 'Clean room' for title and leaves expiry_date empty, then submits form"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests updating an existing todo with only notes field modified.",
+          "id": "TC07_update_todo_partial_fields",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Update todo with only one field changed",
+          "test_setup": {
+            "given": "TodoForm rendered with existing todo values: title='Old title', description='Old desc', notes='Old notes', expiry_date='2024-07-01'",
+            "then": "onSave is called with updated notes and other fields unchanged",
+            "when": "User changes notes to 'Updated notes' and submits form"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests updating expiry_date to a non-YYYY-MM-DD value; expects validation error.",
+          "id": "TC08_update_todo_invalid_expiry_date_format",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Update todo with invalid expiry_date format",
+          "test_setup": {
+            "given": "TodoForm rendered with existing todo values",
+            "then": "Error message is shown indicating invalid expiry_date format; onSave is NOT called",
+            "when": "User changes expiry_date to '2024/07/01' and submits form"
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Tests that form fields are pre-filled with existing todo values when editing.",
+          "id": "TC09_form_render_initial_values",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Render form with initial values for update",
+          "test_setup": {
+            "given": "TodoForm rendered with props: title='Finish project', description='Due soon', notes='Check requirements', expiry_date='2024-07-10'",
+            "then": "Form fields are pre-filled with provided values",
+            "when": "Component is rendered"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests form submission with a title at the allowed max length (example: 255 chars).",
+          "id": "TC10_submit_with_max_length_title",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Submit todo with maximum allowed title length",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "onSave is called with title value of 255 characters; no error shown",
+            "when": "User enters 'T.repeat(255)' for title and submits form"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Tests form submission with special characters in title, description, notes, and expiry_date.",
+          "id": "TC11_submit_with_special_characters",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Submit todo with special characters in all fields",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "onSave is called with correct values; no error shown",
+            "when": "User enters '!@#$%^&*()' for title, description, and notes, and '2024-07-01' for expiry_date, then submits form"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Tests user cancelling the form (if a cancel button exists).",
+          "id": "TC12_cancel_form_submission",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Cancel form submission",
+          "test_setup": {
+            "given": "TodoForm rendered with filled fields and cancel handler",
+            "then": "Form is closed or reset; onSave is NOT called",
+            "when": "User clicks cancel button"
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Tests validation trigger when user leaves (blurs) the title field empty.",
+          "id": "TC13_blur_title_field_without_input",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Blur title field without input",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields",
+            "then": "Error message appears indicating title is required",
+            "when": "User focuses and then blurs title input without entering any text"
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Tests form submission with a title of one character.",
+          "id": "TC14_submit_with_min_length_title",
+          "implementation_id": "ui_todo_form_component",
+          "name": "Submit todo with minimum length title",
+          "test_setup": {
+            "given": "TodoForm rendered with empty fields and onSave handler",
+            "then": "onSave is called with title='A'; no error shown",
+            "when": "User enters 'A' for title and submits form"
+          },
+          "type": "edge"
+        }
+      ]
+    }
+  ],
+  "endpoint": [
+    {
+      "implementation_id": "backend_endpoint_list_todos",
+      "test_cases": [
+        {
+          "description": "Ensure GET /todos returns an empty list when no todos exist in the database.",
+          "id": "tc_list_todos_empty",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "List todos when database is empty",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos",
+          "response_body_json": {
+            "todos": []
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Database contains zero todos.",
+            "then": "Response is 200 and todos is an empty list.",
+            "when": "GET /todos is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Ensure GET /todos returns all todos with correct fields.",
+          "id": "tc_list_todos_multiple",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "List todos when multiple todos exist",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos",
+          "response_body_json": {
+            "todos": [
+              {
+                "description": "Milk, eggs, bread",
+                "expiry_date": "2024-07-01",
+                "id": 1,
+                "notes": "Check for discounts",
+                "title": "Buy groceries"
+              },
+              {
+                "description": null,
+                "expiry_date": null,
+                "id": 2,
+                "notes": null,
+                "title": "Call plumber"
+              }
+            ]
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Database contains two todos with varied fields.",
+            "then": "Response contains both todos with all fields as stored.",
+            "when": "GET /todos is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "POST /todos with valid title, description, notes, and expiry_date.",
+          "id": "tc_create_todo_valid_all_fields",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with all valid fields",
+          "request_body_json": {
+            "description": "Read 'Clean Code'",
+            "expiry_date": "2024-06-30",
+            "notes": "Start with chapter 1",
+            "title": "Read book"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": "Read 'Clean Code'",
+            "expiry_date": "2024-06-30",
+            "id": 3,
+            "notes": "Start with chapter 1",
+            "title": "Read book"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "Empty database or existing todos.",
+            "then": "Todo is created and response contains all fields.",
+            "when": "POST /todos with valid fields."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "POST /todos with only title; description, notes, expiry_date omitted.",
+          "id": "tc_create_todo_missing_optional_fields",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with only required field",
+          "request_body_json": {
+            "title": "Walk the dog"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": 4,
+            "notes": null,
+            "title": "Walk the dog"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "Database available.",
+            "then": "Todo is created with null optional fields.",
+            "when": "POST /todos with only title."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "POST /todos with empty string for title should return error.",
+          "id": "tc_create_todo_empty_title",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with empty title",
+          "request_body_json": {
+            "title": ""
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "Title is required and cannot be empty."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "Database is available.",
+            "then": "API returns 400 error for missing or empty title.",
+            "when": "POST /todos with empty title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "POST /todos without title should return error.",
+          "id": "tc_create_todo_missing_title",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with missing title",
+          "request_body_json": {
+            "description": "No title"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "Title is required."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "Database is available.",
+            "then": "API returns 400 error for missing title.",
+            "when": "POST /todos without title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "POST /todos with expiry_date not matching 'YYYY-MM-DD' should return error.",
+          "id": "tc_create_todo_invalid_expiry_date_format",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with invalid expiry_date format",
+          "request_body_json": {
+            "expiry_date": "30-06-2024",
+            "title": "Pay bills"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "expiry_date must be in 'YYYY-MM-DD' format."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "Database is available.",
+            "then": "API returns 400 error for invalid expiry_date format.",
+            "when": "POST /todos with invalid expiry_date."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "POST /todos with expiry_date '2024-02-29' (valid leap year).",
+          "id": "tc_create_todo_expiry_date_edge_valid_leap_year",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with expiry_date on leap day",
+          "request_body_json": {
+            "expiry_date": "2024-02-29",
+            "title": "Leap Day Task"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": "2024-02-29",
+            "id": 5,
+            "notes": null,
+            "title": "Leap Day Task"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "Database is available.",
+            "then": "Todo is created and expiry_date is stored.",
+            "when": "POST /todos with valid leap year expiry_date."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "POST /todos with expiry_date '2024-13-01' (invalid month).",
+          "id": "tc_create_todo_expiry_date_edge_invalid_month",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with expiry_date invalid month",
+          "request_body_json": {
+            "expiry_date": "2024-13-01",
+            "title": "Impossible Month"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "expiry_date must be a valid date in 'YYYY-MM-DD' format."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "Database is available.",
+            "then": "API returns 400 error for invalid expiry_date.",
+            "when": "POST /todos with invalid month in expiry_date."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "GET /todos/{id} returns full todo record for an existing id.",
+          "id": "tc_get_todo_valid_id",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Get todo by valid id",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Milk, eggs, bread",
+            "expiry_date": "2024-07-01",
+            "id": 1,
+            "notes": "Check for discounts",
+            "title": "Buy groceries"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Todo with id=1 exists.",
+            "then": "Response contains all fields for the todo.",
+            "when": "GET /todos/1 is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "GET /todos/{id} returns error when todo does not exist.",
+          "id": "tc_get_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Get todo by nonexistent id",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/999",
+          "response_body_json": {
+            "error": "Todo not found."
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id=999 exists.",
+            "then": "API returns 404 error.",
+            "when": "GET /todos/999 is called."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "PUT /todos/{id} updates only provided fields, leaves others unchanged.",
+          "id": "tc_update_todo_some_fields",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Update todo with some fields",
+          "request_body_json": {
+            "description": "Updated description",
+            "notes": "Updated notes"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Updated description",
+            "expiry_date": "2024-07-01",
+            "id": 1,
+            "notes": "Updated notes",
+            "title": "Buy groceries"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Todo with id=1 exists.",
+            "then": "Only provided fields are updated.",
+            "when": "PUT /todos/1 with some fields."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "PUT /todos/{id} with expiry_date not matching 'YYYY-MM-DD' should return error.",
+          "id": "tc_update_todo_invalid_expiry_date_format",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Update todo with invalid expiry_date format",
+          "request_body_json": {
+            "expiry_date": "07/01/2024"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "error": "expiry_date must be in 'YYYY-MM-DD' format."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "Todo with id=1 exists.",
+            "then": "API returns 400 error.",
+            "when": "PUT /todos/1 with invalid expiry_date."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "PUT /todos/{id} for nonexistent id returns error.",
+          "id": "tc_update_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Update todo by nonexistent id",
+          "request_body_json": {
+            "title": "New title"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/999",
+          "response_body_json": {
+            "error": "Todo not found."
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id=999 exists.",
+            "then": "API returns 404 error.",
+            "when": "PUT /todos/999 called."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "DELETE /todos/{id} removes todo and it is no longer accessible.",
+          "id": "tc_delete_todo_valid_id",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Delete todo by valid id",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/2",
+          "response_body_json": {},
+          "response_status_code": 204,
+          "test_setup": {
+            "given": "Todo with id=2 exists.",
+            "then": "Todo is deleted and not returned in GET /todos/2 or list.",
+            "when": "DELETE /todos/2 is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "DELETE /todos/{id} for nonexistent id returns error.",
+          "id": "tc_delete_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Delete todo by nonexistent id",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/999",
+          "response_body_json": {
+            "error": "Todo not found."
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id=999 exists.",
+            "then": "API returns 404 error.",
+            "when": "DELETE /todos/999 is called."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "GET /todos returns todos with optional fields as null if not set.",
+          "id": "tc_list_todos_with_null_optional_fields",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "List todos with null optional fields",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos",
+          "response_body_json": {
+            "todos": [
+              {
+                "description": null,
+                "expiry_date": null,
+                "id": 4,
+                "notes": null,
+                "title": "Walk the dog"
+              }
+            ]
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Todo created with only title.",
+            "then": "Optional fields are null in response.",
+            "when": "GET /todos is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "POST /todos with title at maximum allowed length (e.g., 255 chars).",
+          "id": "tc_create_todo_title_max_length",
+          "implementation_id": "backend_endpoint_list_todos",
+          "name": "Create todo with maximum title length",
+          "request_body_json": {
+            "title": "T.repeat(255)"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": 6,
+            "notes": null,
+            "title": "T.repeat(255)"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "Database available.",
+            "then": "Todo is created successfully.",
+            "when": "POST /todos with max length title."
+          },
+          "type": "edge"
+        }
+      ]
+    },
+    {
+      "implementation_id": "backend_endpoint_get_todo",
+      "test_cases": [
+        {
+          "description": "Retrieve an existing todo by a valid ID and expect all fields to be present.",
+          "id": "get_todo_valid_id",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo by Valid ID",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Milk, eggs, bread",
+            "expiry_date": "2024-07-15",
+            "notes": "Remember to check for discounts",
+            "title": "Buy groceries"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists in the database with all fields populated.",
+            "then": "The API returns status 200 and the full todo record.",
+            "when": "A GET request is sent to /todos/1."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Retrieve a todo that only has the required field (title), and verify optional fields are null or absent.",
+          "id": "get_todo_only_required_field",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo With Only Title",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/2",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "notes": null,
+            "title": "Read book"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=2 exists with only the title set.",
+            "then": "The API returns status 200 with title present and other fields as null.",
+            "when": "A GET request is sent to /todos/2."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Attempt to get a todo with an ID that does not exist, expecting a 404 error.",
+          "id": "get_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo with Nonexistent ID",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/999999",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo exists in the database with id=999999.",
+            "then": "The API returns status 404 with an appropriate error message.",
+            "when": "A GET request is sent to /todos/999999."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempt to access a todo using a string instead of an integer ID, expecting a 422 or 404 error.",
+          "id": "get_todo_invalid_id_type_string",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo with Invalid ID Type (String)",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/abc",
+          "response_body_json": {
+            "detail": "Invalid ID format"
+          },
+          "response_status_code": 422,
+          "test_setup": {
+            "given": "No todo exists with id='abc'.",
+            "then": "The API returns status 422 with an error about invalid ID format.",
+            "when": "A GET request is sent to /todos/abc."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempt to get a todo with a negative integer ID, expecting a 404 or validation error.",
+          "id": "get_todo_invalid_id_type_negative",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo with Negative ID",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/-1",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo exists with id=-1.",
+            "then": "The API returns status 404.",
+            "when": "A GET request is sent to /todos/-1."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempt to get a todo with ID 0, testing lower boundary for IDs.",
+          "id": "get_todo_id_zero",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo with ID Zero",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/0",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo exists with id=0.",
+            "then": "The API returns status 404.",
+            "when": "A GET request is sent to /todos/0."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempt to get a todo with a very large integer ID.",
+          "id": "get_todo_large_id",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo with Large Integer ID",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/9223372036854775807",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo exists with id=9223372036854775807.",
+            "then": "The API returns status 404.",
+            "when": "A GET request is sent to /todos/9223372036854775807."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempt to get a todo after it has been deleted, expecting a 404 error.",
+          "id": "get_todo_after_deletion",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo After Deletion",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/3",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "A todo with id=3 existed but has been deleted.",
+            "then": "The API returns 404 as the todo no longer exists.",
+            "when": "A GET request is sent to /todos/3."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Confirm that expiry_date is returned as null if not set on creation.",
+          "id": "get_todo_expiry_date_null",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo with Null Expiry Date",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/4",
+          "response_body_json": {
+            "description": "Weekly check-in",
+            "expiry_date": null,
+            "notes": null,
+            "title": "Call mom"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=4 exists with expiry_date not set.",
+            "then": "The API returns status 200 with expiry_date as null.",
+            "when": "A GET request is sent to /todos/4."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Retrieve a todo where optional fields were omitted at creation and verify their absence or null values.",
+          "id": "get_todo_optional_fields_absent",
+          "implementation_id": "backend_endpoint_get_todo",
+          "name": "Get Todo With Optional Fields Absent",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/5",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "notes": null,
+            "title": "Finish project"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=5 was created with only the title.",
+            "then": "The API returns all fields, with optional fields as null.",
+            "when": "A GET request is sent to /todos/5."
+          },
+          "type": "positive"
+        }
+      ]
+    },
+    {
+      "implementation_id": "backend_endpoint_create_todo",
+      "test_cases": [
+        {
+          "description": "Create a todo item by providing only the required title field, omitting all optional fields.",
+          "id": "tc_create_todo_minimal_valid",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with only required field",
+          "request_body_json": {
+            "title": "Buy groceries"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": "generated_id",
+            "notes": null,
+            "title": "Buy groceries"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Todo is created with optional fields null.",
+            "when": "POST /todos with title only."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Create a todo item with title, description, notes, and expiry_date (valid format).",
+          "id": "tc_create_todo_all_fields_valid",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with all valid fields",
+          "request_body_json": {
+            "description": "Finish reading 'Clean Code'",
+            "expiry_date": "2024-12-31",
+            "notes": "Start from chapter 3",
+            "title": "Read book"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": "Finish reading 'Clean Code'",
+            "expiry_date": "2024-12-31",
+            "id": "generated_id",
+            "notes": "Start from chapter 3",
+            "title": "Read book"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Todo is created with all provided fields.",
+            "when": "POST /todos with all fields."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Try to create a todo item without providing the required title field.",
+          "id": "tc_create_todo_missing_title",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo missing required title",
+          "request_body_json": {
+            "description": "No title",
+            "notes": "Should fail"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "Title is required."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Error response for missing required field.",
+            "when": "POST /todos without title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Try to create a todo item with an empty string as the title.",
+          "id": "tc_create_todo_empty_title",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with empty title",
+          "request_body_json": {
+            "title": ""
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "Title must not be empty."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Error response for empty title.",
+            "when": "POST /todos with empty title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempt to create a todo with expiry_date not matching 'YYYY-MM-DD'.",
+          "id": "tc_create_todo_invalid_expiry_date_format",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with invalid expiry_date format",
+          "request_body_json": {
+            "expiry_date": "31-12-2024",
+            "title": "Call mom"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "error": "expiry_date must match format 'YYYY-MM-DD'."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Error response for invalid date format.",
+            "when": "POST /todos with invalid expiry_date."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Create a todo where expiry_date is explicitly set to null.",
+          "id": "tc_create_todo_expiry_date_null",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with expiry_date explicitly null",
+          "request_body_json": {
+            "expiry_date": null,
+            "title": "Walk dog"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": "generated_id",
+            "notes": null,
+            "title": "Walk dog"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Todo is created with expiry_date null.",
+            "when": "POST /todos with expiry_date null."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Create a todo with a title at the typical maximum length (e.g., 255 characters).",
+          "id": "tc_create_todo_title_max_length",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with title at maximum length",
+          "request_body_json": {
+            "title": "T.repeat(255)"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": "generated_id",
+            "notes": null,
+            "title": "T.repeat(255)"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Todo is created successfully.",
+            "when": "POST /todos with 255-char title."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Create a todo with the title consisting of a single character.",
+          "id": "tc_create_todo_title_one_char",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with title of one character",
+          "request_body_json": {
+            "title": "A"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": "generated_id",
+            "notes": null,
+            "title": "A"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Todo is created successfully.",
+            "when": "POST /todos with 1-char title."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Create a todo with expiry_date set to February 29 in a leap year.",
+          "id": "tc_create_todo_expiry_date_leap_year",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Create Todo with expiry_date on leap year",
+          "request_body_json": {
+            "expiry_date": "2024-02-29",
+            "title": "Leap year check"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "POST",
+          "request_url": "/todos",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": "2024-02-29",
+            "id": "generated_id",
+            "notes": null,
+            "title": "Leap year check"
+          },
+          "response_status_code": 201,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Todo is created successfully.",
+            "when": "POST /todos with expiry_date '2024-02-29'."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Retrieve the list of todos when the database is empty.",
+          "id": "tc_get_todos_list_empty",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "List Todos when none exist",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos",
+          "response_body_json": [],
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "No todos exist.",
+            "then": "Empty list is returned.",
+            "when": "GET /todos."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Retrieve the list of todos after several have been created.",
+          "id": "tc_get_todos_list_populated",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "List Todos after creation",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos",
+          "response_body_json": [
+            {
+              "description": null,
+              "expiry_date": null,
+              "id": 1,
+              "notes": null,
+              "title": "Buy groceries"
+            },
+            {
+              "description": "Finish reading 'Clean Code'",
+              "expiry_date": "2024-12-31",
+              "id": 2,
+              "notes": "Start from chapter 3",
+              "title": "Read book"
+            }
+          ],
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Two todos exist.",
+            "then": "List contains all existing todos.",
+            "when": "GET /todos."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Retrieve a single todo item by its id when it exists.",
+          "id": "tc_get_todo_by_id_exists",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Get Todo by valid id",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": 1,
+            "notes": null,
+            "title": "Buy groceries"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Todo with id=1 exists.",
+            "then": "Returns full todo record.",
+            "when": "GET /todos/1."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Retrieve a single todo item by id that does not exist.",
+          "id": "tc_get_todo_by_id_not_exists",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Get Todo by nonexistent id",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "GET",
+          "request_url": "/todos/99999",
+          "response_body_json": {
+            "error": "Todo not found."
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id=99999.",
+            "then": "Returns error for nonexistent todo.",
+            "when": "GET /todos/99999."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Update only the notes field of an existing todo.",
+          "id": "tc_update_todo_single_field",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Update Todo with a single field",
+          "request_body_json": {
+            "notes": "Remember to buy eggs"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": null,
+            "id": 1,
+            "notes": "Remember to buy eggs",
+            "title": "Buy groceries"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Todo with id=1 exists, notes=null.",
+            "then": "Notes is updated, other fields unchanged.",
+            "when": "PUT /todos/1 with notes."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Update the description and expiry_date of an existing todo.",
+          "id": "tc_update_todo_multiple_fields",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Update Todo with multiple fields",
+          "request_body_json": {
+            "description": "Read chapters 1-5",
+            "expiry_date": "2024-11-30"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/2",
+          "response_body_json": {
+            "description": "Read chapters 1-5",
+            "expiry_date": "2024-11-30",
+            "id": 2,
+            "notes": "Start from chapter 3",
+            "title": "Read book"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "Todo with id=2 exists.",
+            "then": "Fields are updated as provided.",
+            "when": "PUT /todos/2 with description and expiry_date."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Attempt to update expiry_date to an invalid format.",
+          "id": "tc_update_todo_invalid_expiry_date",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Update Todo with invalid expiry_date format",
+          "request_body_json": {
+            "expiry_date": "20241130"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/2",
+          "response_body_json": {
+            "error": "expiry_date must match format 'YYYY-MM-DD'."
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "Todo with id=2 exists.",
+            "then": "Error response for invalid date format.",
+            "when": "PUT /todos/2 with invalid expiry_date."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempt to update a todo that does not exist.",
+          "id": "tc_update_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Update Todo by nonexistent id",
+          "request_body_json": {
+            "notes": "This won't update"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/99999",
+          "response_body_json": {
+            "error": "Todo not found."
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id=99999.",
+            "then": "Error response for nonexistent todo.",
+            "when": "PUT /todos/99999."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Delete an existing todo item and ensure it is removed from list and get endpoints.",
+          "id": "tc_delete_todo_exists",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Delete Todo by valid id",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/1",
+          "response_body_json": null,
+          "response_status_code": 204,
+          "test_setup": {
+            "given": "Todo with id=1 exists.",
+            "then": "Todo is deleted and no longer accessible.",
+            "when": "DELETE /todos/1."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Attempt to delete a todo that does not exist.",
+          "id": "tc_delete_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_create_todo",
+          "name": "Delete Todo by nonexistent id",
+          "request_body_json": null,
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/99999",
+          "response_body_json": {
+            "error": "Todo not found."
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id=99999.",
+            "then": "Error response for nonexistent todo.",
+            "when": "DELETE /todos/99999."
+          },
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "implementation_id": "backend_endpoint_update_todo",
+      "test_cases": [
+        {
+          "description": "Successfully updates all fields of an existing todo.",
+          "id": "put_update_todo_all_fields_success",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update existing todo with all fields",
+          "request_body_json": {
+            "description": "Updated description",
+            "expiry_date": "2030-12-31",
+            "notes": "Updated notes",
+            "title": "Updated Title"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Updated description",
+            "expiry_date": "2030-12-31",
+            "id": 1,
+            "notes": "Updated notes",
+            "title": "Updated Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists with valid initial fields.",
+            "then": "The response contains the updated todo with all specified fields changed.",
+            "when": "A PUT request is made to update all fields."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Successfully updates only the description of an existing todo, leaving other fields unchanged.",
+          "id": "put_update_todo_partial_fields_success",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update existing todo with only description field",
+          "request_body_json": {
+            "description": "New partial description"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "New partial description",
+            "expiry_date": "2025-01-01",
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists with title 'Existing Title', description 'Old description', notes 'Existing notes', and expiry_date '2025-01-01'.",
+            "then": "Only the description is updated; other fields remain unchanged.",
+            "when": "A PUT request is made with only a new description."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Sends a PUT request with an empty body, expecting no changes and a successful response.",
+          "id": "put_update_todo_no_fields_success",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo with empty body (no fields)",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Existing description",
+            "expiry_date": "2025-01-01",
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "The todo is unchanged and returned as in the database.",
+            "when": "A PUT request is made with an empty body."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Attempts to update an existing todo with an empty string for the title, expecting a validation error.",
+          "id": "put_update_todo_title_empty_rejected",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Reject update with empty title",
+          "request_body_json": {
+            "title": ""
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "error": "Title must not be empty"
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "A 400 error is returned indicating the title cannot be empty.",
+            "when": "A PUT request is made with an empty title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempts to update the expiry_date with an invalid format. Should return a validation error.",
+          "id": "put_update_todo_expiry_date_invalid_format",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Reject update with invalid expiry_date format",
+          "request_body_json": {
+            "expiry_date": "12-31-2030"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "error": "expiry_date must be in 'YYYY-MM-DD' format"
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "A 400 error is returned regarding the invalid expiry_date format.",
+            "when": "A PUT request is made with an expiry_date in the wrong format."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempts to update expiry_date with a non-string value, expecting a validation error.",
+          "id": "put_update_todo_expiry_date_invalid_type",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Reject update with non-string expiry_date",
+          "request_body_json": {
+            "expiry_date": 20221231
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "error": "expiry_date must be a string in 'YYYY-MM-DD' format"
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "A 400 error is returned regarding the expiry_date type.",
+            "when": "A PUT request is made with a non-string expiry_date."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempts to update a todo that does not exist, expecting a 404 error.",
+          "id": "put_update_todo_nonexistent_id",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update non-existent todo",
+          "request_body_json": {
+            "title": "Should Not Exist"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/9999",
+          "response_body_json": {
+            "error": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo exists with id=9999.",
+            "then": "A 404 error is returned indicating the todo is not found.",
+            "when": "A PUT request is made to update id=9999."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Updates the title with a string at the maximum allowed length (e.g., 255 characters).",
+          "id": "put_update_todo_title_max_length",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo with maximum length title",
+          "request_body_json": {
+            "title": "T.repeat(255)"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Existing description",
+            "expiry_date": "2025-01-01",
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "T.repeat(255)"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "The update is accepted; the title is set to the long string.",
+            "when": "A PUT request is made with a 255-character title."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempts to set the title to a string of only whitespace, expecting a validation error.",
+          "id": "put_update_todo_title_whitespace_only",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Reject update with whitespace-only title",
+          "request_body_json": {
+            "title": "    "
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "error": "Title must not be empty"
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "A 400 error is returned indicating the title cannot be empty.",
+            "when": "A PUT request is made with a whitespace-only title."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Updates expiry_date to the earliest possible valid value (e.g., 0001-01-01).",
+          "id": "put_update_todo_expiry_date_min_date",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo with earliest valid expiry_date",
+          "request_body_json": {
+            "expiry_date": "0001-01-01"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Existing description",
+            "expiry_date": "0001-01-01",
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "The update is accepted, and the expiry_date is set.",
+            "when": "A PUT request is made with expiry_date '0001-01-01'."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Updates expiry_date to a far future date (e.g., 9999-12-31) to test boundary.",
+          "id": "put_update_todo_expiry_date_max_date",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo with far-future expiry_date",
+          "request_body_json": {
+            "expiry_date": "9999-12-31"
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Existing description",
+            "expiry_date": "9999-12-31",
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "The update is accepted, and the expiry_date is set.",
+            "when": "A PUT request is made with expiry_date '9999-12-31'."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Updates a todo by explicitly setting description to null. The field should be set to null in the database.",
+          "id": "put_update_todo_description_null",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo setting description to null",
+          "request_body_json": {
+            "description": null
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": null,
+            "expiry_date": "2025-01-01",
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists with a non-null description.",
+            "then": "The description is updated to null.",
+            "when": "A PUT request is made with description=null."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Updates a todo by explicitly setting notes to null. The field should be set to null in the database.",
+          "id": "put_update_todo_notes_null",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo setting notes to null",
+          "request_body_json": {
+            "notes": null
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Existing description",
+            "expiry_date": "2025-01-01",
+            "id": 1,
+            "notes": null,
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists with a non-null notes field.",
+            "then": "The notes field is updated to null.",
+            "when": "A PUT request is made with notes=null."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Updates a todo by explicitly setting expiry_date to null. The field should be set to null in the database.",
+          "id": "put_update_todo_expiry_date_null",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Update todo setting expiry_date to null",
+          "request_body_json": {
+            "expiry_date": null
+          },
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "description": "Existing description",
+            "expiry_date": null,
+            "id": 1,
+            "notes": "Existing notes",
+            "title": "Existing Title"
+          },
+          "response_status_code": 200,
+          "test_setup": {
+            "given": "A todo with id=1 exists with a non-null expiry_date.",
+            "then": "The expiry_date is updated to null.",
+            "when": "A PUT request is made with expiry_date=null."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Sends a PUT request with malformed JSON, expecting a 400 error.",
+          "id": "put_update_todo_invalid_json",
+          "implementation_id": "backend_endpoint_update_todo",
+          "name": "Reject update with invalid JSON body",
+          "request_body_json": "{ \"title\": \"Missing quote }",
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "PUT",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "error": "Malformed JSON"
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "A todo with id=1 exists.",
+            "then": "A 400 error is returned indicating the request body is not valid JSON.",
+            "when": "A PUT request is made with invalid JSON."
+          },
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "implementation_id": "backend_endpoint_delete_todo",
+      "test_cases": [
+        {
+          "description": "Successfully deletes a todo item with a valid ID and ensures it is no longer accessible.",
+          "id": "delete_existing_todo_positive",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete existing todo",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/101",
+          "response_body_json": {},
+          "response_status_code": 204,
+          "test_setup": {
+            "given": "A todo with id 101 exists in the database.",
+            "then": "Todo 101 is removed. Subsequent GET /todos/101 returns 404.",
+            "when": "DELETE /todos/101 is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Attempts to delete a todo item with an ID that does not exist.",
+          "id": "delete_nonexistent_todo_negative",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete nonexistent todo",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/9999",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id 9999 exists in the database.",
+            "then": "API returns 404 Not Found.",
+            "when": "DELETE /todos/9999 is called."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Deletes a todo, then attempts to delete it again to ensure correct error handling.",
+          "id": "delete_todo_twice_edge",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo twice",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/202",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "A todo with id 202 exists.",
+            "then": "First call returns 204, second call returns 404 as the item no longer exists.",
+            "when": "DELETE /todos/202 is called twice in succession."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempts to delete a todo using an invalid ID format (non-integer).",
+          "id": "delete_todo_invalid_id_negative",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo with invalid id format",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/abc",
+          "response_body_json": {
+            "detail": "Invalid todo id format"
+          },
+          "response_status_code": 400,
+          "test_setup": {
+            "given": "No todo with id 'abc' exists; id must be integer.",
+            "then": "API returns 400 Bad Request.",
+            "when": "DELETE /todos/abc is called."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Attempts to delete a todo with a boundary ID value (e.g., 0).",
+          "id": "delete_todo_edge_id_boundary",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo with boundary id value",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/0",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id 0 exists (id starts at 1).",
+            "then": "API returns 404 Not Found.",
+            "when": "DELETE /todos/0 is called."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempts to delete a todo without authentication header when authentication is required.",
+          "id": "delete_todo_no_auth_negative",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo without authentication",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/303",
+          "response_body_json": {
+            "detail": "Authentication required"
+          },
+          "response_status_code": 401,
+          "test_setup": {
+            "given": "Authentication is required but not provided.",
+            "then": "API returns 401 Unauthorized.",
+            "when": "DELETE /todos/303 is called without authentication header."
+          },
+          "type": "negative"
+        },
+        {
+          "description": "Deletes a todo that has all fields (title, description, notes, expiry_date) set to verify correct removal.",
+          "id": "delete_todo_with_child_fields_positive",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo with all fields set",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/404",
+          "response_body_json": {},
+          "response_status_code": 204,
+          "test_setup": {
+            "given": "A todo with id 404 exists and all fields are populated.",
+            "then": "Todo 404 and its fields are removed. GET /todos/404 returns 404.",
+            "when": "DELETE /todos/404 is called."
+          },
+          "type": "positive"
+        },
+        {
+          "description": "Attempts to delete a todo when the database is empty.",
+          "id": "delete_todo_empty_db_edge",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo in empty database",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/1",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "Database is empty, no todos exist.",
+            "then": "API returns 404 Not Found.",
+            "when": "DELETE /todos/1 is called."
+          },
+          "type": "edge"
+        },
+        {
+          "description": "Attempts to delete a todo using an excessively large integer ID.",
+          "id": "delete_todo_long_id_edge",
+          "implementation_id": "backend_endpoint_delete_todo",
+          "name": "Delete todo with long integer id",
+          "request_body_json": {},
+          "request_headers": {
+            "Content-Type": "application/json"
+          },
+          "request_method": "DELETE",
+          "request_url": "/todos/9223372036854775807",
+          "response_body_json": {
+            "detail": "Todo not found"
+          },
+          "response_status_code": 404,
+          "test_setup": {
+            "given": "No todo with id 9223372036854775807 exists.",
+            "then": "API returns 404 Not Found.",
+            "when": "DELETE /todos/9223372036854775807 is called."
+          },
+          "type": "edge"
+        }
+      ]
+    }
+  ]
+}

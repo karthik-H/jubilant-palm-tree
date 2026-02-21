@@ -1,0 +1,71 @@
+{
+  "task_6738402930_20260220192019": {
+    "implementation": [
+      {
+        "How_is_it_connected_to_implementation": "Main UI component for managing todos. Handles listing, creating, editing, and deleting todos by invoking API methods and rendering todo fields (title, description, notes, expiry_date).",
+        "file_path": "frontend/src/App.tsx",
+        "id": "ui_todo_manager_component",
+        "name": "App",
+        "pseudo_code": "On mount:\n  Call todoApi.list() to fetch todos\n  Display todos in a list\n  For each todo:\n    Show title, description, notes, expiry_date\n    Provide edit and delete buttons\n  On 'New todo' button:\n    Show TodoForm for creation\n  On edit:\n    Show TodoForm with existing values\n  On delete:\n    Confirm and call todoApi.delete(id)",
+        "type": "component"
+      },
+      {
+        "How_is_it_connected_to_implementation": "UI form for creating and updating todos. Enforces required title, collects description, notes, and expiry_date, and passes data to parent handlers.",
+        "file_path": "frontend/src/App.tsx",
+        "id": "ui_todo_form_component",
+        "name": "TodoForm",
+        "pseudo_code": "Render form fields:\n  Input for title (required)\n  Textarea for description\n  Textarea for notes\n  Date input for expiry_date\nOn submit:\n  IF title is empty\n    Show error\n  ELSE\n    Call onSave with form data",
+        "type": "component"
+      },
+      {
+        "How_is_it_connected_to_implementation": "Provides frontend API methods for CRUD operations. Each method corresponds to a backend endpoint for todos.",
+        "file_path": "frontend/src/api.ts",
+        "id": "frontend_api_todo_methods",
+        "name": "todoApi (list, get, create, update, delete)",
+        "pseudo_code": "list():\n  Send GET request to /todos\nget(id):\n  Send GET request to /todos/{id}\ncreate(data):\n  Send POST request to /todos with data\nupdate(id, data):\n  Send PUT request to /todos/{id} with data\ndelete(id):\n  Send DELETE request to /todos/{id}",
+        "type": "function"
+      },
+      {
+        "How_is_it_connected_to_implementation": "Backend endpoint for listing all todos. Returns todos with all specified fields.",
+        "file_path": "backend/main.py",
+        "id": "backend_endpoint_list_todos",
+        "name": "/todos (GET)",
+        "pseudo_code": "On GET /todos:\n  Open DB cursor\n  Execute SQL to select all todos\n  For each row:\n    Convert to Todo object\n  Return list of todos",
+        "type": "endpoint"
+      },
+      {
+        "How_is_it_connected_to_implementation": "Backend endpoint for retrieving a single todo by ID. Returns all fields.",
+        "file_path": "backend/main.py",
+        "id": "backend_endpoint_get_todo",
+        "name": "/todos/{todo_id} (GET)",
+        "pseudo_code": "On GET /todos/{todo_id}:\n  Open DB cursor\n  Execute SQL to select todo by id\n  IF not found\n    Raise 404\n  ELSE\n    Convert to Todo object\n    Return todo",
+        "type": "endpoint"
+      },
+      {
+        "How_is_it_connected_to_implementation": "Backend endpoint for creating a new todo. Requires title, accepts description, notes, expiry_date.",
+        "file_path": "backend/main.py",
+        "id": "backend_endpoint_create_todo",
+        "name": "/todos (POST)",
+        "pseudo_code": "On POST /todos with TodoCreate:\n  Open DB cursor\n  Insert todo into DB with title, description, notes, expiry_date\n  Get inserted row id\n  Return created todo",
+        "type": "endpoint"
+      },
+      {
+        "How_is_it_connected_to_implementation": "Backend endpoint for updating an existing todo. Accepts partial updates for all fields.",
+        "file_path": "backend/main.py",
+        "id": "backend_endpoint_update_todo",
+        "name": "/todos/{todo_id} (PUT)",
+        "pseudo_code": "On PUT /todos/{todo_id} with TodoUpdate:\n  Open DB cursor\n  Check if todo exists\n  IF not found\n    Raise 404\n  ELSE\n    Build update SQL for provided fields\n    Execute update\n    Return updated todo",
+        "type": "endpoint"
+      },
+      {
+        "How_is_it_connected_to_implementation": "Backend endpoint for deleting a todo by ID.",
+        "file_path": "backend/main.py",
+        "id": "backend_endpoint_delete_todo",
+        "name": "/todos/{todo_id} (DELETE)",
+        "pseudo_code": "On DELETE /todos/{todo_id}:\n  Open DB cursor\n  Execute SQL to delete todo by id\n  IF not found\n    Raise 404\n  ELSE\n    Return None",
+        "type": "endpoint"
+      }
+    ],
+    "missing_implementations": []
+  }
+}
