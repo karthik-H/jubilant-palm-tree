@@ -66,7 +66,7 @@ frontend/
 
 | Method | Path         | Description        |
 |--------|--------------|--------------------|
-| GET    | /todos       | List all todos     |
+| GET    | /todos       | List all todos     | 
 | GET    | /todos/{id}  | Get one todo       |
 | POST   | /todos       | Create todo        |
 | PUT    | /todos/{id}  | Update todo        |
