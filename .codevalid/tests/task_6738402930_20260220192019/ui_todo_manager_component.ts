@@ -16,13 +16,11 @@ jest.mock('../../../frontend/src/api', () => ({
   },
 }));
 
-// Helper to open TodoForm for creation
 const openCreateForm = async () => {
   fireEvent.click(screen.getByText(/New todo/i));
   await waitFor(() => screen.getByText(/New todo/i));
 };
 
-// Helper to open TodoForm for editing
 const openEditForm = async (todoTitle: string) => {
   fireEvent.click(screen.getAllByText(/Edit/i).find(btn =>
     btn.closest('li')?.querySelector('h3')?.textContent === todoTitle
@@ -305,7 +303,6 @@ describe('App Component', () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce([]);
     (todoApi.get as jest.Mock).mockRejectedValueOnce(new Error('Todo not found'));
     render(<App />);
-    fireEvent.click(screen.getByText(/New todo/i));
     fireEvent.click(screen.getByText(/View details/i));
     expect(await screen.findByText(/Todo not found/i)).toBeInTheDocument();
   });
