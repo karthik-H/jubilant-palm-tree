@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../../../frontend/src/App';
 import { todoApi } from '../../../frontend/src/api';
-import type { Todo, TodoCreate, TodoUpdate } from '../../../frontend/src/types';
+import type { Todo } from '../../../frontend/src/types';
 
 // Mock todoApi
 jest.mock('../../../frontend/src/api', () => ({
@@ -41,9 +41,11 @@ const openCreateForm = async () => {
 
 // Helper to open TodoForm for editing
 const openEditForm = async (todoTitle: string) => {
-  fireEvent.click(screen.getAllByText(/Edit/i).find(btn =>
-    btn.closest('li')?.querySelector('h3')?.textContent === todoTitle
-  )!);
+  fireEvent.click(
+    screen.getAllByText(/Edit/i).find(btn =>
+      btn.closest('li')?.querySelector('h3')?.textContent === todoTitle
+    )!
+  );
   await waitFor(() => screen.getByText(/Edit todo/i));
 };
 
@@ -52,92 +54,86 @@ describe('App Component', () => {
     jest.clearAllMocks();
   });
 
-  // Test Case 1: Fetch todos on component mount
-  test('Fetch todos on component mount', async () => {
+  // Test Case 1: Fetch and render todos on mount
+  test('Fetch and render todos on mount', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     render(<App />);
     expect(todoApi.list).toHaveBeenCalledTimes(1);
     await waitFor(() => screen.getByText('Test Todo'));
     expect(screen.getByText('Test Todo')).toBeInTheDocument();
     expect(screen.getByText('Second Todo')).toBeInTheDocument();
-  });
-
-  // Test Case 2: Render all todo fields
-  test('Render all todo fields', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
     expect(screen.getByText('Test Description')).toBeInTheDocument();
     expect(screen.getByText('Test Notes')).toBeInTheDocument();
     expect(screen.getByText(/Expires:/)).toBeInTheDocument();
+    // Optional fields blank/omitted
     expect(screen.getByText('Second Todo')).toBeInTheDocument();
-    expect(screen.getByText(/Expires:/)).toBeInTheDocument();
   });
 
-  // Test Case 3: Show form on 'New todo' button click
-  test("Show form on 'New todo' button click", async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openCreateForm();
-    expect(screen.getByText(/New todo/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Title/i)).toHaveValue('');
-    expect(screen.getByLabelText(/Description/i)).toHaveValue('');
-    expect(screen.getByLabelText(/Notes/i)).toHaveValue('');
-    expect(screen.getByLabelText(/Expiry date/i)).toHaveValue('');
-  });
-
-  // Test Case 4: Create todo with required field only
-  test('Create todo with required field only', async () => {
+  // Test Case 2: Create todo with all fields
+  test('Create todo with all fields', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     (todoApi.create as jest.Mock).mockResolvedValueOnce({
       id: 3,
       title: 'New Todo',
-      description: undefined,
-      notes: undefined,
-      expiry_date: null,
+      description: 'Desc',
+      notes: 'Note',
+      expiry_date: '2024-12-31',
     });
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     await openCreateForm();
     fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'New Todo' } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Desc' } });
+    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'Note' } });
+    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2024-12-31' } });
     fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.create).toHaveBeenCalledWith({
-      title: 'New Todo',
-      description: undefined,
-      notes: undefined,
-      expiry_date: null,
-    }));
+    await waitFor(() =>
+      expect(todoApi.create).toHaveBeenCalledWith({
+        title: 'New Todo',
+        description: 'Desc',
+        notes: 'Note',
+        expiry_date: '2024-12-31',
+      })
+    );
+    await waitFor(() => screen.getByText('New Todo'));
+    expect(screen.getByText('Desc')).toBeInTheDocument();
+    expect(screen.getByText('Note')).toBeInTheDocument();
+    expect(screen.getByText(/2024-12-31/)).toBeInTheDocument();
   });
 
-  // Test Case 5: Create todo with all fields
-  test('Create todo with all fields', async () => {
+  // Test Case 3: Create todo with title only
+  test('Create todo with title only', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     (todoApi.create as jest.Mock).mockResolvedValueOnce({
       id: 4,
-      title: 'Full Todo',
-      description: 'Desc',
-      notes: 'Note',
-      expiry_date: '2026-12-31',
+      title: 'Title Only',
+      description: undefined,
+      notes: undefined,
+      expiry_date: null,
     });
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     await openCreateForm();
-    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Full Todo' } });
-    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Desc' } });
-    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'Note' } });
-    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2026-12-31' } });
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Title Only' } });
     fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.create).toHaveBeenCalledWith({
-      title: 'Full Todo',
-      description: 'Desc',
-      notes: 'Note',
-      expiry_date: '2026-12-31',
-    }));
+    await waitFor(() =>
+      expect(todoApi.create).toHaveBeenCalledWith({
+        title: 'Title Only',
+        description: undefined,
+        notes: undefined,
+        expiry_date: null,
+      })
+    );
+    await waitFor(() => screen.getByText('Title Only'));
+    expect(screen.getByText('Title Only')).toBeInTheDocument();
+    // Optional fields not rendered
+    expect(screen.queryByText(/Desc/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Note/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Expires:/)).not.toBeInTheDocument();
   });
 
-  // Test Case 6: Create todo with missing title
-  test('Create todo with missing title', async () => {
+  // Test Case 4: Create todo missing required title
+  test('Create todo missing required title', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
@@ -148,86 +144,110 @@ describe('App Component', () => {
     expect(todoApi.create).not.toHaveBeenCalled();
   });
 
-  // Test Case 7: Create todo with invalid expiry_date format
+  // Test Case 5: Create todo with empty title
+  test('Create todo with empty title', async () => {
+    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
+    render(<App />);
+    await waitFor(() => screen.getByText('Test Todo'));
+    await openCreateForm();
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: '' } });
+    fireEvent.click(screen.getByText(/Save/i));
+    expect(await screen.findByText(/Title is required/i)).toBeInTheDocument();
+    expect(todoApi.create).not.toHaveBeenCalled();
+  });
+
+  // Test Case 6: Create todo with invalid expiry_date format
   test('Create todo with invalid expiry_date format', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     await openCreateForm();
     fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Invalid Date Todo' } });
-    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2023/12/31' } });
+    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '31-12-2024' } });
     (todoApi.create as jest.Mock).mockRejectedValueOnce(new Error('Invalid date format'));
     fireEvent.click(screen.getByText(/Save/i));
     expect(await screen.findByText(/Invalid date format/i)).toBeInTheDocument();
     expect(todoApi.create).toHaveBeenCalled();
   });
 
-  // Test Case 8: Edit todo shows form with existing values
-  test("Edit todo shows form with existing values", async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openEditForm('Test Todo');
-    expect(screen.getByText(/Edit todo/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Title/i)).toHaveValue('Test Todo');
-    expect(screen.getByLabelText(/Description/i)).toHaveValue('Test Description');
-    expect(screen.getByLabelText(/Notes/i)).toHaveValue('Test Notes');
-    expect(screen.getByLabelText(/Expiry date/i)).toHaveValue('2026-12-31');
-  });
-
-  // Test Case 9: Update a todo's title
-  test("Update a todo's title", async () => {
+  // Test Case 7: Edit todo to update some fields
+  test('Edit todo to update some fields', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     (todoApi.update as jest.Mock).mockResolvedValueOnce({
       ...mockTodos[0],
-      title: 'Updated Title',
+      description: 'Updated Desc',
+      notes: 'Updated Note',
     });
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     await openEditForm('Test Todo');
-    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Updated Title' } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Updated Desc' } });
+    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'Updated Note' } });
     fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.update).toHaveBeenCalledWith(1, expect.objectContaining({ title: 'Updated Title' })));
+    await waitFor(() =>
+      expect(todoApi.update).toHaveBeenCalledWith(1, expect.objectContaining({
+        description: 'Updated Desc',
+        notes: 'Updated Note',
+      }))
+    );
+    await waitFor(() => screen.getByText('Updated Desc'));
+    expect(screen.getByText('Updated Note')).toBeInTheDocument();
+    expect(screen.getByText('Test Todo')).toBeInTheDocument();
   });
 
-  // Test Case 10: Update only optional fields
-  test('Update only optional fields', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    (todoApi.update as jest.Mock).mockResolvedValueOnce({
-      ...mockTodos[0],
-      description: 'New Desc',
-      notes: 'New Note',
-      expiry_date: '2027-01-01',
-    });
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openEditForm('Test Todo');
-    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'New Desc' } });
-    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'New Note' } });
-    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2027-01-01' } });
-    fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.update).toHaveBeenCalledWith(1, expect.objectContaining({
-      description: 'New Desc',
-      notes: 'New Note',
-      expiry_date: '2027-01-01',
-    })));
-  });
-
-  // Test Case 11: Update todo with invalid expiry_date
-  test('Update todo with invalid expiry_date', async () => {
+  // Test Case 8: Edit todo with invalid expiry_date format
+  test('Edit todo with invalid expiry_date format', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     await openEditForm('Test Todo');
-    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '31-12-2023' } });
+    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '12/31/2024' } });
     (todoApi.update as jest.Mock).mockRejectedValueOnce(new Error('Invalid date format'));
     fireEvent.click(screen.getByText(/Save/i));
     expect(await screen.findByText(/Invalid date format/i)).toBeInTheDocument();
     expect(todoApi.update).toHaveBeenCalled();
   });
 
-  // Test Case 12: Delete a todo
-  test('Delete a todo', async () => {
+  // Test Case 9: Edit todo to remove optional fields
+  test('Edit todo to remove optional fields', async () => {
+    (todoApi.list as jest.Mock).mockResolvedValueOnce([
+      {
+        id: 1,
+        title: 'Full Todo',
+        description: 'Desc',
+        notes: 'Note',
+        expiry_date: '2026-12-31',
+      },
+    ]);
+    (todoApi.update as jest.Mock).mockResolvedValueOnce({
+      id: 1,
+      title: 'Full Todo',
+      description: undefined,
+      notes: undefined,
+      expiry_date: null,
+    });
+    render(<App />);
+    await waitFor(() => screen.getByText('Full Todo'));
+    await openEditForm('Full Todo');
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '' } });
+    fireEvent.click(screen.getByText(/Save/i));
+    await waitFor(() =>
+      expect(todoApi.update).toHaveBeenCalledWith(1, expect.objectContaining({
+        description: undefined,
+        notes: undefined,
+        expiry_date: null,
+      }))
+    );
+    await waitFor(() => screen.getByText('Full Todo'));
+    expect(screen.queryByText('Desc')).not.toBeInTheDocument();
+    expect(screen.queryByText('Note')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Expires:/)).not.toBeInTheDocument();
+  });
+
+  // Test Case 10: Delete todo with confirmation
+  test('Delete todo with confirmation', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     (todoApi.delete as jest.Mock).mockResolvedValueOnce(undefined);
     window.confirm = jest.fn(() => true);
@@ -235,91 +255,70 @@ describe('App Component', () => {
     await waitFor(() => screen.getByText('Test Todo'));
     fireEvent.click(screen.getAllByText(/Delete/i)[0]);
     await waitFor(() => expect(todoApi.delete).toHaveBeenCalledWith(1));
+    await waitFor(() => expect(screen.queryByText('Test Todo')).not.toBeInTheDocument());
   });
 
-  // Test Case 13: Delete a nonexistent todo
-  test('Delete a nonexistent todo', async () => {
+  // Test Case 11: Delete todo and cancel
+  test('Delete todo and cancel', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    (todoApi.delete as jest.Mock).mockRejectedValueOnce(new Error('Todo not found'));
-    window.confirm = jest.fn(() => true);
+    window.confirm = jest.fn(() => false);
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     fireEvent.click(screen.getAllByText(/Delete/i)[0]);
+    expect(todoApi.delete).not.toHaveBeenCalled();
+    expect(screen.getByText('Test Todo')).toBeInTheDocument();
+  });
+
+  // Test Case 12: Delete nonexistent todo
+  test('Delete nonexistent todo', async () => {
+    (todoApi.list as jest.Mock).mockResolvedValueOnce([
+      {
+        id: 99,
+        title: 'Stale Todo',
+        description: '',
+        notes: '',
+        expiry_date: null,
+      },
+    ]);
+    (todoApi.delete as jest.Mock).mockRejectedValueOnce(new Error('Todo not found'));
+    window.confirm = jest.fn(() => true);
+    render(<App />);
+    await waitFor(() => screen.getByText('Stale Todo'));
+    fireEvent.click(screen.getAllByText(/Delete/i)[0]);
     expect(await screen.findByText(/Todo not found/i)).toBeInTheDocument();
-    expect(todoApi.delete).toHaveBeenCalledWith(1);
+    expect(todoApi.delete).toHaveBeenCalledWith(99);
+    await waitFor(() => expect(screen.queryByText('Stale Todo')).not.toBeInTheDocument());
   });
 
-  // Test Case 14: View a nonexistent todo
-  test('View a nonexistent todo', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    (todoApi.get as jest.Mock).mockRejectedValueOnce(new Error('Todo not found'));
+  // Test Case 13: Get one todo renders edit form with correct data
+  test('Get one todo renders edit form with correct data', async () => {
+    (todoApi.list as jest.Mock).mockResolvedValueOnce([
+      {
+        id: 1,
+        title: 'Edit Me',
+        description: 'Edit Desc',
+        notes: 'Edit Notes',
+        expiry_date: '2024-02-29',
+      },
+      {
+        id: 2,
+        title: 'Other Todo',
+        description: '',
+        notes: '',
+        expiry_date: null,
+      },
+    ]);
     render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openEditForm('Test Todo');
-    // Simulate API error on get-one (not directly used in App, but for completeness)
-    expect(todoApi.get).not.toHaveBeenCalled(); // App does not call get-one on edit, but test for error display
+    await waitFor(() => screen.getByText('Edit Me'));
+    await openEditForm('Edit Me');
+    expect(screen.getByLabelText(/Title/i)).toHaveValue('Edit Me');
+    expect(screen.getByLabelText(/Description/i)).toHaveValue('Edit Desc');
+    expect(screen.getByLabelText(/Notes/i)).toHaveValue('Edit Notes');
+    expect(screen.getByLabelText(/Expiry date/i)).toHaveValue('2024-02-29');
   });
 
-  // Test Case 15: List todos when none exist
-  test('List todos when none exist', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce([]);
-    render(<App />);
-    await waitFor(() => screen.getByText(/No todos yet/i));
-    expect(screen.getByText(/No todos yet/i)).toBeInTheDocument();
-  });
-
-  // Test Case 16: Create todo with whitespace-only title
-  test('Create todo with whitespace-only title', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openCreateForm();
-    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: '   ' } });
-    fireEvent.click(screen.getByText(/Save/i));
-    expect(await screen.findByText(/Title is required/i)).toBeInTheDocument();
-    expect(todoApi.create).not.toHaveBeenCalled();
-  });
-
-  // Test Case 17: Create todo with expiry_date omitted
-  test('Create todo with expiry_date omitted', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    (todoApi.create as jest.Mock).mockResolvedValueOnce({
-      id: 5,
-      title: 'No Expiry',
-      description: undefined,
-      notes: undefined,
-      expiry_date: null,
-    });
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openCreateForm();
-    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'No Expiry' } });
-    fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.create).toHaveBeenCalledWith({
-      title: 'No Expiry',
-      description: undefined,
-      notes: undefined,
-      expiry_date: null,
-    }));
-  });
-
-  // Test Case 18: Update todo to remove expiry_date
-  test('Update todo to remove expiry_date', async () => {
-    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
-    (todoApi.update as jest.Mock).mockResolvedValueOnce({
-      ...mockTodos[0],
-      expiry_date: null,
-    });
-    render(<App />);
-    await waitFor(() => screen.getByText('Test Todo'));
-    await openEditForm('Test Todo');
-    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '' } });
-    fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.update).toHaveBeenCalledWith(1, expect.objectContaining({ expiry_date: null })));
-  });
-
-  // Test Case 19: Update a nonexistent todo
-  test('Update a nonexistent todo', async () => {
+  // Test Case 14: Edit nonexistent todo
+  test('Edit nonexistent todo', async () => {
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     (todoApi.update as jest.Mock).mockRejectedValueOnce(new Error('Todo not found'));
     render(<App />);
@@ -330,31 +329,146 @@ describe('App Component', () => {
     expect(todoApi.update).toHaveBeenCalled();
   });
 
-  // Test Case 20: Create todo with maximum field lengths
-  test('Create todo with maximum field lengths', async () => {
-    const maxDesc = 'a'.repeat(1000);
-    const maxNotes = 'b'.repeat(1000);
+  // Test Case 15: List reflects all CRUD operations
+  test('List reflects all CRUD operations', async () => {
+    // Initial list
+    (todoApi.list as jest.Mock).mockResolvedValueOnce([]);
+    render(<App />);
+    await waitFor(() => screen.getByText(/No todos yet/i));
+    // Create
+    await openCreateForm();
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'CRUD Todo' } });
+    (todoApi.create as jest.Mock).mockResolvedValueOnce({
+      id: 10,
+      title: 'CRUD Todo',
+      description: 'CRUD Desc',
+      notes: 'CRUD Notes',
+      expiry_date: '2026-12-31',
+    });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'CRUD Desc' } });
+    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'CRUD Notes' } });
+    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2026-12-31' } });
+    fireEvent.click(screen.getByText(/Save/i));
+    await waitFor(() => screen.getByText('CRUD Todo'));
+    // Edit
+    await openEditForm('CRUD Todo');
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Updated Desc' } });
+    (todoApi.update as jest.Mock).mockResolvedValueOnce({
+      id: 10,
+      title: 'CRUD Todo',
+      description: 'Updated Desc',
+      notes: 'CRUD Notes',
+      expiry_date: '2026-12-31',
+    });
+    fireEvent.click(screen.getByText(/Save/i));
+    await waitFor(() => screen.getByText('Updated Desc'));
+    // Delete
+    window.confirm = jest.fn(() => true);
+    (todoApi.delete as jest.Mock).mockResolvedValueOnce(undefined);
+    fireEvent.click(screen.getAllByText(/Delete/i)[0]);
+    await waitFor(() => expect(todoApi.delete).toHaveBeenCalledWith(10));
+    await waitFor(() => expect(screen.queryByText('CRUD Todo')).not.toBeInTheDocument());
+  });
+
+  // Test Case 16: Create todo with maximum allowed title length
+  test('Create todo with maximum allowed title length', async () => {
+    const maxTitle = 'T'.repeat(255);
     (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
     (todoApi.create as jest.Mock).mockResolvedValueOnce({
-      id: 6,
-      title: 'Max Fields',
-      description: maxDesc,
-      notes: maxNotes,
+      id: 11,
+      title: maxTitle,
+      description: 'Desc',
+      notes: 'Notes',
       expiry_date: '2026-12-31',
     });
     render(<App />);
     await waitFor(() => screen.getByText('Test Todo'));
     await openCreateForm();
-    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Max Fields' } });
-    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: maxDesc } });
-    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: maxNotes } });
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: maxTitle } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Desc' } });
+    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'Notes' } });
     fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2026-12-31' } });
     fireEvent.click(screen.getByText(/Save/i));
-    await waitFor(() => expect(todoApi.create).toHaveBeenCalledWith({
-      title: 'Max Fields',
-      description: maxDesc,
-      notes: maxNotes,
-      expiry_date: '2026-12-31',
-    }));
+    await waitFor(() =>
+      expect(todoApi.create).toHaveBeenCalledWith({
+        title: maxTitle,
+        description: 'Desc',
+        notes: 'Notes',
+        expiry_date: '2026-12-31',
+      })
+    );
+    await waitFor(() => screen.getByText(maxTitle));
+    expect(screen.getByText(maxTitle)).toBeInTheDocument();
+  });
+
+  // Test Case 17: Create todo with expiry_date on leap day
+  test('Create todo with expiry_date on leap day', async () => {
+    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
+    (todoApi.create as jest.Mock).mockResolvedValueOnce({
+      id: 12,
+      title: 'Leap Day Todo',
+      description: 'Leap Desc',
+      notes: 'Leap Notes',
+      expiry_date: '2024-02-29',
+    });
+    render(<App />);
+    await waitFor(() => screen.getByText('Test Todo'));
+    await openCreateForm();
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Leap Day Todo' } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Leap Desc' } });
+    fireEvent.change(screen.getByLabelText(/Notes/i), { target: { value: 'Leap Notes' } });
+    fireEvent.change(screen.getByLabelText(/Expiry date/i), { target: { value: '2024-02-29' } });
+    fireEvent.click(screen.getByText(/Save/i));
+    await waitFor(() =>
+      expect(todoApi.create).toHaveBeenCalledWith({
+        title: 'Leap Day Todo',
+        description: 'Leap Desc',
+        notes: 'Leap Notes',
+        expiry_date: '2024-02-29',
+      })
+    );
+    await waitFor(() => screen.getByText('Leap Day Todo'));
+    expect(screen.getByText(/2024-02-29/)).toBeInTheDocument();
+  });
+
+  // Test Case 18: Edit todo and set title to empty
+  test('Edit todo and set title to empty', async () => {
+    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
+    render(<App />);
+    await waitFor(() => screen.getByText('Test Todo'));
+    await openEditForm('Test Todo');
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: '' } });
+    fireEvent.click(screen.getByText(/Save/i));
+    expect(await screen.findByText(/Title is required/i)).toBeInTheDocument();
+    expect(todoApi.update).not.toHaveBeenCalled();
+  });
+
+  // Test Case 19: Handle network error on API calls
+  test('Handle network error on API calls', async () => {
+    (todoApi.list as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    render(<App />);
+    expect(await screen.findByText(/Network error/i)).toBeInTheDocument();
+
+    // Create
+    (todoApi.list as jest.Mock).mockResolvedValueOnce(mockTodos);
+    render(<App />);
+    await waitFor(() => screen.getByText('Test Todo'));
+    await openCreateForm();
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'NetErr Todo' } });
+    (todoApi.create as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    fireEvent.click(screen.getByText(/Save/i));
+    expect(await screen.findByText(/Network error/i)).toBeInTheDocument();
+
+    // Edit
+    await openEditForm('Test Todo');
+    (todoApi.update as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    fireEvent.click(screen.getByText(/Save/i));
+    expect(await screen.findByText(/Network error/i)).toBeInTheDocument();
+
+    // Delete
+    window.confirm = jest.fn(() => true);
+    (todoApi.delete as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    fireEvent.click(screen.getAllByText(/Delete/i)[0]);
+    expect(await screen.findByText(/Network error/i)).toBeInTheDocument();
   });
 });

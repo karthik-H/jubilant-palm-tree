@@ -43,119 +43,137 @@ def insert_todo(title, description=None, notes=None, expiry_date=None):
     conn.close()
     return todo_id
 
-# Test Case 1: List todos when database is empty
-def test_list_todos_when_database_is_empty():
+# Test Case 1: GET /todos returns empty list when no todos exist
+def test_get_todos_returns_empty_list_when_no_todos_exist():
     response = client.get("/todos")
     assert response.status_code == 200
     assert response.json() == {"todos": []}
 
-# Test Case 2: List todos when multiple todos exist
-def test_list_todos_when_multiple_todos_exist():
+# Test Case 2: GET /todos returns all existing todos with fields
+def test_get_todos_returns_all_existing_todos_with_fields():
     id1 = insert_todo(
         title="Buy groceries",
         description="Milk, eggs, bread",
-        notes="Check for discounts",
+        notes="Use discount coupons",
         expiry_date="2024-07-01"
     )
     id2 = insert_todo(
-        title="Call plumber"
+        title="Read book"
     )
     response = client.get("/todos")
     assert response.status_code == 200
     todos = response.json()["todos"]
-    assert len(todos) == 2
-    assert {"description": "Milk, eggs, bread", "expiry_date": "2024-07-01", "id": id1, "notes": "Check for discounts", "title": "Buy groceries"} in todos
-    assert {"description": None, "expiry_date": None, "id": id2, "notes": None, "title": "Call plumber"} in todos
-
-# Test Case 3: Create todo with all valid fields
-def test_create_todo_with_all_valid_fields():
-    response = client.post(
-        "/todos",
-        json={
-            "title": "Read book",
-            "description": "Read 'Clean Code'",
-            "notes": "Start with chapter 1",
-            "expiry_date": "2024-06-30"
+    expected = [
+        {
+            "description": "Milk, eggs, bread",
+            "expiry_date": "2024-07-01",
+            "id": id1,
+            "notes": "Use discount coupons",
+            "title": "Buy groceries"
+        },
+        {
+            "description": None,
+            "expiry_date": None,
+            "id": id2,
+            "notes": None,
+            "title": "Read book"
         }
-    )
-    assert response.status_code == 201
-    data = response.json()
-    assert data["title"] == "Read book"
-    assert data["description"] == "Read 'Clean Code'"
-    assert data["notes"] == "Start with chapter 1"
-    assert data["expiry_date"] == "2024-06-30"
-    assert isinstance(data["id"], int)
+    ]
+    assert sorted(todos, key=lambda t: t["id"]) == sorted(expected, key=lambda t: t["id"])
 
-# Test Case 4: Create todo with only required field
-def test_create_todo_with_only_required_field():
+# Test Case 3: POST /todos creates todo with only required title
+def test_post_todos_creates_todo_with_only_required_title():
     response = client.post(
         "/todos",
-        json={"title": "Walk the dog"}
+        json={"title": "New Task"}
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["title"] == "Walk the dog"
+    assert data["title"] == "New Task"
     assert data["description"] is None
     assert data["notes"] is None
     assert data["expiry_date"] is None
     assert isinstance(data["id"], int)
 
-# Test Case 5: Create todo with empty title
-def test_create_todo_with_empty_title():
+# Test Case 4: POST /todos creates todo with all fields valid
+def test_post_todos_creates_todo_with_all_fields_valid():
+    payload = {
+        "description": "Quarterly business analysis",
+        "expiry_date": "2024-07-15",
+        "notes": "Finalize by Friday",
+        "title": "Prepare report"
+    }
+    response = client.post("/todos", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == payload["title"]
+    assert data["description"] == payload["description"]
+    assert data["notes"] == payload["notes"]
+    assert data["expiry_date"] == payload["expiry_date"]
+    assert isinstance(data["id"], int)
+
+# Test Case 5: POST /todos error when title is missing
+def test_post_todos_error_when_title_is_missing():
+    response = client.post(
+        "/todos",
+        json={"description": "Missing title"}
+    )
+    assert response.status_code == 400
+    assert response.json() == {"error": "Title is required."}
+
+# Test Case 6: POST /todos error when title is empty
+def test_post_todos_error_when_title_is_empty():
     response = client.post(
         "/todos",
         json={"title": ""}
     )
     assert response.status_code == 400
-    assert response.json() == {"error": "Title is required and cannot be empty."}
+    assert response.json() == {"error": "Title must not be empty."}
 
-# Test Case 6: Create todo with missing title
-def test_create_todo_with_missing_title():
+# Test Case 7: POST /todos error when expiry_date is invalid
+def test_post_todos_error_when_expiry_date_is_invalid():
     response = client.post(
         "/todos",
-        json={"description": "No title"}
+        json={"expiry_date": "07-15-2024", "title": "Task"}
     )
     assert response.status_code == 400
-    assert response.json() == {"error": "Title is required."}
+    assert response.json() == {"error": "expiry_date must match 'YYYY-MM-DD'."}
 
-# Test Case 7: Create todo with invalid expiry_date format
-def test_create_todo_with_invalid_expiry_date_format():
+# Test Case 8: POST /todos creates todo with expiry_date at boundary
+def test_post_todos_creates_todo_with_expiry_date_at_boundary():
     response = client.post(
         "/todos",
-        json={"title": "Pay bills", "expiry_date": "30-06-2024"}
-    )
-    assert response.status_code == 400
-    assert response.json() == {"error": "expiry_date must be in 'YYYY-MM-DD' format."}
-
-# Test Case 8: Create todo with expiry_date on leap day
-def test_create_todo_with_expiry_date_on_leap_day():
-    response = client.post(
-        "/todos",
-        json={"title": "Leap Day Task", "expiry_date": "2024-02-29"}
+        json={"expiry_date": "0000-01-01", "title": "Boundary date task"}
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["title"] == "Leap Day Task"
-    assert data["expiry_date"] == "2024-02-29"
+    assert data["title"] == "Boundary date task"
+    assert data["expiry_date"] == "0000-01-01"
     assert data["description"] is None
     assert data["notes"] is None
     assert isinstance(data["id"], int)
 
-# Test Case 9: Create todo with expiry_date invalid month
-def test_create_todo_with_expiry_date_invalid_month():
+# Test Case 9: POST /todos creates todo with very long title
+def test_post_todos_creates_todo_with_very_long_title():
+    long_title = "T" * 255
     response = client.post(
         "/todos",
-        json={"title": "Impossible Month", "expiry_date": "2024-13-01"}
+        json={"title": long_title}
     )
-    assert response.status_code == 400
-    assert response.json() == {"error": "expiry_date must be a valid date in 'YYYY-MM-DD' format."}
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == long_title
+    assert data["description"] is None
+    assert data["notes"] is None
+    assert data["expiry_date"] is None
+    assert isinstance(data["id"], int)
 
-# Test Case 10: Get todo by valid id
-def test_get_todo_by_valid_id():
+# Test Case 10: GET /todos/{id} returns todo with all fields
+def test_get_todos_id_returns_todo_with_all_fields():
     todo_id = insert_todo(
         title="Buy groceries",
         description="Milk, eggs, bread",
-        notes="Check for discounts",
+        notes="Use discount coupons",
         expiry_date="2024-07-01"
     )
     response = client.get(f"/todos/{todo_id}")
@@ -164,64 +182,93 @@ def test_get_todo_by_valid_id():
         "description": "Milk, eggs, bread",
         "expiry_date": "2024-07-01",
         "id": todo_id,
-        "notes": "Check for discounts",
+        "notes": "Use discount coupons",
         "title": "Buy groceries"
     }
 
-# Test Case 11: Get todo by nonexistent id
-def test_get_todo_by_nonexistent_id():
-    response = client.get("/todos/999")
+# Test Case 11: GET /todos/{id} returns error for nonexistent id
+def test_get_todos_id_returns_error_for_nonexistent_id():
+    response = client.get("/todos/9999")
     assert response.status_code == 404
     assert response.json() == {"error": "Todo not found."}
 
-# Test Case 12: Update todo with some fields
-def test_update_todo_with_some_fields():
+# Test Case 12: PUT /todos/{id} updates only specified fields
+def test_put_todos_id_updates_only_specified_fields():
     todo_id = insert_todo(
         title="Buy groceries",
         description="Milk, eggs, bread",
-        notes="Check for discounts",
+        notes="Use discount coupons",
         expiry_date="2024-07-01"
     )
     response = client.put(
         f"/todos/{todo_id}",
-        json={"description": "Updated description", "notes": "Updated notes"}
+        json={"description": "Updated description"}
     )
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == todo_id
     assert data["title"] == "Buy groceries"
     assert data["description"] == "Updated description"
-    assert data["notes"] == "Updated notes"
+    assert data["notes"] == "Use discount coupons"
     assert data["expiry_date"] == "2024-07-01"
 
-# Test Case 13: Update todo with invalid expiry_date format
-def test_update_todo_with_invalid_expiry_date_format():
+# Test Case 13: PUT /todos/{id} updates all fields
+def test_put_todos_id_updates_all_fields():
     todo_id = insert_todo(
         title="Buy groceries",
         description="Milk, eggs, bread",
-        notes="Check for discounts",
+        notes="Use discount coupons",
+        expiry_date="2024-07-01"
+    )
+    payload = {
+        "description": "Get vegetables",
+        "expiry_date": "2024-07-15",
+        "notes": "Check prices",
+        "title": "Shop groceries"
+    }
+    response = client.put(
+        f"/todos/{todo_id}",
+        json=payload
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == todo_id
+    assert data["title"] == payload["title"]
+    assert data["description"] == payload["description"]
+    assert data["notes"] == payload["notes"]
+    assert data["expiry_date"] == payload["expiry_date"]
+
+# Test Case 14: PUT /todos/{id} error for invalid expiry_date
+def test_put_todos_id_error_for_invalid_expiry_date():
+    todo_id = insert_todo(
+        title="Buy groceries",
+        description="Milk, eggs, bread",
+        notes="Use discount coupons",
         expiry_date="2024-07-01"
     )
     response = client.put(
         f"/todos/{todo_id}",
-        json={"expiry_date": "07/01/2024"}
+        json={"expiry_date": "20240715"}
     )
     assert response.status_code == 400
-    assert response.json() == {"error": "expiry_date must be in 'YYYY-MM-DD' format."}
+    assert response.json() == {"error": "expiry_date must match 'YYYY-MM-DD'."}
 
-# Test Case 14: Update todo by nonexistent id
-def test_update_todo_by_nonexistent_id():
+# Test Case 15: PUT /todos/{id} error for nonexistent todo id
+def test_put_todos_id_error_for_nonexistent_todo_id():
     response = client.put(
-        "/todos/999",
-        json={"title": "New title"}
+        "/todos/9999",
+        json={"title": "Nonexistent"}
     )
     assert response.status_code == 404
     assert response.json() == {"error": "Todo not found."}
 
-# Test Case 15: Delete todo by valid id
-def test_delete_todo_by_valid_id():
+# Test Case 16: DELETE /todos/{id} removes todo successfully
+def test_delete_todos_id_removes_todo_successfully():
     todo_id = insert_todo(
-        title="Call plumber"
+        title="Buy groceries",
+        description="Milk, eggs, bread",
+        notes="Use discount coupons",
+        expiry_date="2024-07-01"
     )
     response = client.delete(f"/todos/{todo_id}")
     assert response.status_code == 204
@@ -229,45 +276,66 @@ def test_delete_todo_by_valid_id():
     # Confirm deleted
     get_response = client.get(f"/todos/{todo_id}")
     assert get_response.status_code == 404
-    # Confirm not in list
-    list_response = client.get("/todos")
-    todos = list_response.json()["todos"]
-    assert all(t["id"] != todo_id for t in todos)
 
-# Test Case 16: Delete todo by nonexistent id
-def test_delete_todo_by_nonexistent_id():
-    response = client.delete("/todos/999")
+# Test Case 17: DELETE /todos/{id} error for nonexistent todo id
+def test_delete_todos_id_error_for_nonexistent_todo_id():
+    response = client.delete("/todos/9999")
     assert response.status_code == 404
     assert response.json() == {"error": "Todo not found."}
 
-# Test Case 17: List todos with null optional fields
-def test_list_todos_with_null_optional_fields():
-    todo_id = insert_todo(title="Walk the dog")
-    response = client.get("/todos")
-    assert response.status_code == 200
-    assert response.json() == {
-        "todos": [
-            {
-                "description": None,
-                "expiry_date": None,
-                "id": todo_id,
-                "notes": None,
-                "title": "Walk the dog"
-            }
-        ]
-    }
-
-# Test Case 18: Create todo with maximum title length
-def test_create_todo_with_maximum_title_length():
-    max_title = "T" * 255
+# Test Case 18: POST /todos creates todo with notes as empty string
+def test_post_todos_creates_todo_with_notes_as_empty_string():
     response = client.post(
         "/todos",
-        json={"title": max_title}
+        json={"notes": "", "title": "Task with empty notes"}
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["title"] == max_title
+    assert data["title"] == "Task with empty notes"
+    assert data["notes"] == ""
     assert data["description"] is None
+    assert data["expiry_date"] is None
+    assert isinstance(data["id"], int)
+
+# Test Case 19: POST /todos creates todo with description as empty string
+def test_post_todos_creates_todo_with_description_as_empty_string():
+    response = client.post(
+        "/todos",
+        json={"description": "", "title": "Task with empty description"}
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == "Task with empty description"
+    assert data["description"] == ""
     assert data["notes"] is None
     assert data["expiry_date"] is None
     assert isinstance(data["id"], int)
+
+# Test Case 20: GET /todos does not return deleted todo
+def test_get_todos_does_not_return_deleted_todo():
+    id1 = insert_todo(
+        title="Buy groceries",
+        description="Milk, eggs, bread",
+        notes="Use discount coupons",
+        expiry_date="2024-07-01"
+    )
+    id2 = insert_todo(
+        title="Read book"
+    )
+    # Delete id1
+    response = client.delete(f"/todos/{id1}")
+    assert response.status_code == 204
+    # List todos, should only return id2
+    list_response = client.get("/todos")
+    assert list_response.status_code == 200
+    todos = list_response.json()["todos"]
+    expected = [
+        {
+            "description": None,
+            "expiry_date": None,
+            "id": id2,
+            "notes": None,
+            "title": "Read book"
+        }
+    ]
+    assert todos == expected

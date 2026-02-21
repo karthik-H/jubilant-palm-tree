@@ -476,7 +476,8 @@
           },
           "type": "negative"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/frontend_api_todo_methods.ts"
     },
     {
       "implementation_id": "backend_db_cursor_function",
@@ -957,7 +958,8 @@
           },
           "type": "edge"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_db_cursor_function.py"
     },
     {
       "implementation_id": "backend_init_db_function",
@@ -1214,7 +1216,8 @@
           },
           "type": "edge"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_init_db_function.py"
     }
   ],
   "component": [
@@ -1449,7 +1452,8 @@
           },
           "type": "edge"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/ui_todo_manager_component.ts"
     },
     {
       "implementation_id": "ui_todo_form_component",
@@ -1670,7 +1674,8 @@
           },
           "type": "negative"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/ui_todo_form_component.ts"
     }
   ],
   "endpoint": [
@@ -2210,7 +2215,8 @@
           },
           "type": "positive"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_endpoint_list_todos.py"
     },
     {
       "implementation_id": "backend_endpoint_get_todo",
@@ -2453,7 +2459,8 @@
           },
           "type": "edge"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_endpoint_get_todo.py"
     },
     {
       "implementation_id": "backend_endpoint_create_todo",
@@ -3008,7 +3015,8 @@
           },
           "type": "positive"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_endpoint_create_todo.py"
     },
     {
       "implementation_id": "backend_endpoint_update_todo",
@@ -3334,7 +3342,8 @@
           },
           "type": "negative"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_endpoint_update_todo.py"
     },
     {
       "implementation_id": "backend_endpoint_delete_todo",
@@ -3535,7 +3544,8 @@
           },
           "type": "negative"
         }
-      ]
+      ],
+      "test_path": ".codevalid/tests/task_6738402930_20260220192019/backend_endpoint_delete_todo.py"
     }
   ]
 }
