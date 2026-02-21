@@ -4,7 +4,7 @@ A full-stack todo app: **Python** (FastAPI) backend, **TypeScript** (React + Vit
 
 ## Features
 
-- **Todo fields**: title, description, notes, expiry date
+- **Todo fields**: title, description, notes, expiry date 
 - **CRUD**: Create, list, get one, update, delete
 - **Backend**: FastAPI, SQLite, CORS enabled for local frontend
 - **Frontend**: React 18 + TypeScript, Vite, dark UI
