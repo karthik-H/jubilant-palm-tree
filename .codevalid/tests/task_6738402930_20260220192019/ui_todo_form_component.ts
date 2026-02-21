@@ -1,51 +1,45 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TodoForm from '../../../frontend/src/App'; // Default export is App, named export not present, so import as below
-// We'll use destructuring to get TodoForm from App.tsx
-// But since TodoForm is not exported, we need to mock the file structure for test purposes
-// In real projects, TodoForm should be exported separately for testability
+import TodoForm from '../../../frontend/src/App';
 
 // Helper to get input fields
 function getFields() {
   return {
-    title: screen.getByPlaceholderText('Todo title'),
-    description: screen.getByPlaceholderText('Optional description'),
-    notes: screen.getByPlaceholderText('Optional notes'),
-    expiry_date: screen.getByLabelText('Expiry date'),
-    saveBtn: screen.getByRole('button', { name: /save/i }),
-    cancelBtn: screen.getByRole('button', { name: /cancel/i }),
+    title: screen.getByLabelText(/title/i),
+    description: screen.getByLabelText(/description/i),
+    notes: screen.getByLabelText(/notes/i),
+    expiry_date: screen.getByLabelText(/expiry_date|expiry date/i),
+    saveBtn: screen.getByRole('button', { name: /submit|save/i }),
   };
 }
 
 describe('TodoForm Component', () => {
-  // Test Case 1: Create todo with valid title, description, notes, and expiry_date
-  test('Create todo with valid title, description, notes, and expiry_date', async () => {
+  // Test Case 1: Create todo with all valid fields
+  test('Create todo with all valid fields', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { title, description, notes, expiry_date, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: 'Buy milk' } });
-    fireEvent.change(description, { target: { value: 'Get from store' } });
-    fireEvent.change(notes, { target: { value: 'Check expiry' } });
+    fireEvent.change(title, { target: { value: 'Buy groceries' } });
+    fireEvent.change(description, { target: { value: 'Weekly shopping' } });
+    fireEvent.change(notes, { target: { value: 'Remember to use coupons' } });
     fireEvent.change(expiry_date, { target: { value: '2024-07-01' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
-        title: 'Buy milk',
-        description: 'Get from store',
-        notes: 'Check expiry',
+        title: 'Buy groceries',
+        description: 'Weekly shopping',
+        notes: 'Remember to use coupons',
         expiry_date: '2024-07-01',
       })
     );
-    expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+    expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
   });
 
   // Test Case 2: Create todo with only required title
@@ -53,59 +47,53 @@ describe('TodoForm Component', () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { title, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: 'Read book' } });
+    fireEvent.change(title, { target: { value: 'Call mom' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
-        title: 'Read book',
-        description: undefined,
-        notes: undefined,
-        expiry_date: null,
+        title: 'Call mom',
+        description: '',
+        notes: '',
+        expiry_date: '',
       })
     );
-    expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+    expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
   });
 
-  // Test Case 3: Create todo with missing title
-  test('Create todo with missing title', async () => {
+  // Test Case 3: Create todo missing required title
+  test('Create todo missing required title', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { description, notes, expiry_date, saveBtn } = getFields();
-    fireEvent.change(description, { target: { value: 'Desc' } });
-    fireEvent.change(notes, { target: { value: 'Notes' } });
+    fireEvent.change(description, { target: { value: 'Any desc' } });
+    fireEvent.change(notes, { target: { value: 'Any notes' } });
     fireEvent.change(expiry_date, { target: { value: '2024-07-01' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
-      expect(screen.getByText('Title is required')).toBeInTheDocument()
+      expect(screen.getByText(/title is required/i)).toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  // Test Case 4: Create todo with whitespace-only title
-  test('Create todo with whitespace-only title', async () => {
+  // Test Case 4: Create todo with title as only spaces
+  test('Create todo with title as only spaces', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { title, saveBtn } = getFields();
@@ -113,7 +101,7 @@ describe('TodoForm Component', () => {
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
-      expect(screen.getByText('Title is required')).toBeInTheDocument()
+      expect(screen.getByText(/title is required/i)).toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
   });
@@ -123,63 +111,51 @@ describe('TodoForm Component', () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { title, expiry_date, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: 'Walk dog' } });
+    fireEvent.change(title, { target: { value: 'Buy milk' } });
     fireEvent.change(expiry_date, { target: { value: '07/01/2024' } });
     fireEvent.click(saveBtn);
 
-    // The implementation does not validate expiry_date format, so this test will not show error
-    // If expiry_date validation is added, uncomment below
-    // await waitFor(() =>
-    //   expect(screen.getByText('Expiry date format is invalid')).toBeInTheDocument()
-    // );
-    expect(onSave).toHaveBeenCalledWith({
-      title: 'Walk dog',
-      description: undefined,
-      notes: undefined,
-      expiry_date: '07/01/2024',
-    });
+    await waitFor(() =>
+      expect(screen.getByText(/expiry_date format is invalid/i)).toBeInTheDocument()
+    );
+    expect(onSave).not.toHaveBeenCalled();
   });
 
-  // Test Case 6: Create todo with empty expiry_date
-  test('Create todo with empty expiry_date', async () => {
+  // Test Case 6: Create todo with empty expiry_date field
+  test('Create todo with empty expiry_date field', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { title, expiry_date, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: 'Clean room' } });
+    fireEvent.change(title, { target: { value: 'Finish report' } });
     fireEvent.change(expiry_date, { target: { value: '' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
-        title: 'Clean room',
-        description: undefined,
-        notes: undefined,
-        expiry_date: null,
+        title: 'Finish report',
+        description: '',
+        notes: '',
+        expiry_date: '',
       })
     );
-    expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+    expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
   });
 
-  // Test Case 7: Update todo with only one field changed
-  test('Update todo with only one field changed', async () => {
+  // Test Case 7: Update todo with some fields changed
+  test('Update todo with some fields changed', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="Edit todo"
         initial={{
           title: 'Old title',
           description: 'Old desc',
@@ -187,11 +163,11 @@ describe('TodoForm Component', () => {
           expiry_date: '2024-07-01',
         }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
-    const { notes, saveBtn } = getFields();
+    const { notes, expiry_date, saveBtn } = getFields();
     fireEvent.change(notes, { target: { value: 'Updated notes' } });
+    fireEvent.change(expiry_date, { target: { value: '2024-07-10' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
@@ -199,7 +175,7 @@ describe('TodoForm Component', () => {
         title: 'Old title',
         description: 'Old desc',
         notes: 'Updated notes',
-        expiry_date: '2024-07-01',
+        expiry_date: '2024-07-10',
       })
     );
   });
@@ -209,7 +185,6 @@ describe('TodoForm Component', () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="Edit todo"
         initial={{
           title: 'Old title',
           description: 'Old desc',
@@ -217,165 +192,155 @@ describe('TodoForm Component', () => {
           expiry_date: '2024-07-01',
         }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { expiry_date, saveBtn } = getFields();
-    fireEvent.change(expiry_date, { target: { value: '2024/07/01' } });
+    fireEvent.change(expiry_date, { target: { value: '2024-7-10' } });
     fireEvent.click(saveBtn);
 
-    // The implementation does not validate expiry_date format, so this test will not show error
-    // If expiry_date validation is added, uncomment below
-    // await waitFor(() =>
-    //   expect(screen.getByText('Expiry date format is invalid')).toBeInTheDocument()
-    // );
-    expect(onSave).toHaveBeenCalledWith({
-      title: 'Old title',
-      description: 'Old desc',
-      notes: 'Old notes',
-      expiry_date: '2024/07/01',
-    });
-  });
-
-  // Test Case 9: Render form with initial values for update
-  test('Render form with initial values for update', () => {
-    render(
-      <TodoForm
-        title="Edit todo"
-        initial={{
-          title: 'Finish project',
-          description: 'Due soon',
-          notes: 'Check requirements',
-          expiry_date: '2024-07-10',
-        }}
-        onSave={jest.fn()}
-        onCancel={jest.fn()}
-      />
+    await waitFor(() =>
+      expect(screen.getByText(/expiry_date format is invalid/i)).toBeInTheDocument()
     );
-    const { title, description, notes, expiry_date } = getFields();
-    expect(title).toHaveValue('Finish project');
-    expect(description).toHaveValue('Due soon');
-    expect(notes).toHaveValue('Check requirements');
-    expect(expiry_date).toHaveValue('2024-07-10');
+    expect(onSave).not.toHaveBeenCalled();
   });
 
-  // Test Case 10: Submit todo with maximum allowed title length
-  test('Submit todo with maximum allowed title length', async () => {
+  // Test Case 9: Update todo to remove optional fields
+  test('Update todo to remove optional fields', async () => {
     const onSave = jest.fn();
-    const maxTitle = 'T'.repeat(255);
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{
+          title: 'Keep title',
+          description: 'Some desc',
+          notes: 'Some notes',
+          expiry_date: '2024-07-01',
+        }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
-    const { title, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: maxTitle } });
+    const { description, notes, expiry_date, saveBtn } = getFields();
+    fireEvent.change(description, { target: { value: '' } });
+    fireEvent.change(notes, { target: { value: '' } });
+    fireEvent.change(expiry_date, { target: { value: '' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
-        title: maxTitle,
-        description: undefined,
-        notes: undefined,
-        expiry_date: null,
+        title: 'Keep title',
+        description: '',
+        notes: '',
+        expiry_date: '',
       })
     );
-    expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
   });
 
-  // Test Case 11: Submit todo with special characters in all fields
-  test('Submit todo with special characters in all fields', async () => {
+  // Test Case 10: Render form fields and labels correctly
+  test('Render form fields and labels correctly', () => {
+    render(
+      <TodoForm
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
+        onSave={jest.fn()}
+      />
+    );
+    expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/expiry_date|expiry date/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit|save/i })).toBeInTheDocument();
+  });
+
+  // Test Case 11: Submit button disabled when no title
+  test('Submit button disabled when no title', () => {
+    render(
+      <TodoForm
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
+        onSave={jest.fn()}
+      />
+    );
+    const { title, saveBtn } = getFields();
+    fireEvent.change(title, { target: { value: '' } });
+    expect(saveBtn).toBeDisabled();
+    fireEvent.change(title, { target: { value: 'Valid title' } });
+    expect(saveBtn).not.toBeDisabled();
+  });
+
+  // Test Case 12: Handle max length for notes and description fields
+  test('Handle max length for notes and description fields', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
     const { title, description, notes, expiry_date, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: '!@#$%^&*()' } });
-    fireEvent.change(description, { target: { value: '!@#$%^&*()' } });
-    fireEvent.change(notes, { target: { value: '!@#$%^&*()' } });
+    const longText = 'T'.repeat(1000);
+    fireEvent.change(title, { target: { value: 'Valid title' } });
+    fireEvent.change(description, { target: { value: longText } });
+    fireEvent.change(notes, { target: { value: longText } });
     fireEvent.change(expiry_date, { target: { value: '2024-07-01' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
-        title: '!@#$%^&*()',
-        description: '!@#$%^&*()',
-        notes: '!@#$%^&*()',
+        title: 'Valid title',
+        description: longText,
+        notes: longText,
         expiry_date: '2024-07-01',
       })
     );
-    expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
   });
 
-  // Test Case 12: Cancel form submission
-  test('Cancel form submission', () => {
-    const onSave = jest.fn();
-    const onCancel = jest.fn();
-    render(
-      <TodoForm
-        title="New todo"
-        initial={{ title: 'Cancel', description: 'Desc', notes: 'Notes', expiry_date: '2024-07-01' }}
-        onSave={onSave}
-        onCancel={onCancel}
-      />
-    );
-    const { cancelBtn } = getFields();
-    fireEvent.click(cancelBtn);
-    expect(onCancel).toHaveBeenCalled();
-    expect(onSave).not.toHaveBeenCalled();
-  });
-
-  // Test Case 13: Blur title field without input
-  test('Blur title field without input', async () => {
-    render(
-      <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
-        onSave={jest.fn()}
-        onCancel={jest.fn()}
-      />
-    );
-    const { title } = getFields();
-    fireEvent.focus(title);
-    fireEvent.blur(title);
-    // Error only appears after submit, not on blur, per implementation
-    fireEvent.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() =>
-      expect(screen.getByText('Title is required')).toBeInTheDocument()
-    );
-  });
-
-  // Test Case 14: Submit todo with minimum length title
-  test('Submit todo with minimum length title', async () => {
+  // Test Case 13: Create todo with valid leap year expiry_date
+  test('Create todo with valid leap year expiry_date', async () => {
     const onSave = jest.fn();
     render(
       <TodoForm
-        title="New todo"
-        initial={{ title: '', description: '', notes: '', expiry_date: null }}
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
         onSave={onSave}
-        onCancel={jest.fn()}
       />
     );
-    const { title, saveBtn } = getFields();
-    fireEvent.change(title, { target: { value: 'A' } });
+    const { title, expiry_date, saveBtn } = getFields();
+    fireEvent.change(title, { target: { value: 'Leap year task' } });
+    fireEvent.change(expiry_date, { target: { value: '2024-02-29' } });
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
-        title: 'A',
-        description: undefined,
-        notes: undefined,
-        expiry_date: null,
+        title: 'Leap year task',
+        description: '',
+        notes: '',
+        expiry_date: '2024-02-29',
       })
     );
-    expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+    expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
+  });
+
+  // Test Case 14: Create todo with invalid expiry_date month or day
+  test('Create todo with invalid expiry_date month or day', async () => {
+    const onSave = jest.fn();
+    render(
+      <TodoForm
+        initial={{ title: '', description: '', notes: '', expiry_date: '' }}
+        onSave={onSave}
+      />
+    );
+    const { title, expiry_date, saveBtn } = getFields();
+    fireEvent.change(title, { target: { value: 'Invalid date task' } });
+    fireEvent.change(expiry_date, { target: { value: '2024-13-01' } });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() =>
+      expect(screen.getByText(/invalid expiry_date/i)).toBeInTheDocument()
+    );
+    expect(onSave).not.toHaveBeenCalled();
+
+    fireEvent.change(expiry_date, { target: { value: '2024-01-32' } });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() =>
+      expect(screen.getByText(/invalid expiry_date/i)).toBeInTheDocument()
+    );
+    expect(onSave).not.toHaveBeenCalled();
   });
 });
