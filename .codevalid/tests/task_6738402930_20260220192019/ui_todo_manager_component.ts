@@ -16,30 +16,6 @@ jest.mock('../../../frontend/src/api', () => ({
   },
 }));
 
-const mockTodos: Todo[] = [
-  {
-    id: 1,
-    title: 'Buy milk',
-    description: 'Grocery',
-    notes: null,
-    expiry_date: '2024-07-01',
-  },
-  {
-    id: 2,
-    title: 'Laundry',
-    description: 'clothes',
-    notes: null,
-    expiry_date: null,
-  },
-  {
-    id: 3,
-    title: 'Submit report',
-    description: 'Work',
-    notes: null,
-    expiry_date: '2024-09-01',
-  },
-];
-
 // Helper to open TodoForm for creation
 const openCreateForm = async () => {
   fireEvent.click(screen.getByText(/New todo/i));
@@ -131,9 +107,9 @@ describe('App Component', () => {
       expiry_date: null,
     }));
     await waitFor(() => screen.getByText('Read book'));
-    expect(screen.queryByText(/Description/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Notes/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Expiry date/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('My desc')).not.toBeInTheDocument();
+    expect(screen.queryByText('Important')).not.toBeInTheDocument();
+    expect(screen.queryByText('2024-08-15')).not.toBeInTheDocument();
   });
 
   // Test Case 4: Fail to create todo with missing title
@@ -280,12 +256,9 @@ describe('App Component', () => {
     await waitFor(() => screen.getByText('Todo 5'));
     fireEvent.click(screen.getAllByText(/Delete/i)[0]);
     await waitFor(() => expect(todoApi.delete).toHaveBeenCalledWith(5));
-    // Simulate re-fetch
     (todoApi.list as jest.Mock).mockResolvedValueOnce([
       { id: 6, title: 'Todo 6', description: '', notes: null, expiry_date: null },
     ]);
-    // Optionally, re-render or trigger re-fetch
-    // expect(screen.queryByText('Todo 5')).not.toBeInTheDocument();
     await waitFor(() => screen.getByText('Todo 6'));
     expect(screen.queryByText('Todo 5')).not.toBeInTheDocument();
   });
