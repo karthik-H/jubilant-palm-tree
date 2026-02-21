@@ -2,7 +2,7 @@
 
 A full-stack todo app: **Python** (FastAPI) backend, **TypeScript** (React + Vite) frontend, **SQLite** database. Each todo has title, description, notes, and an optional expiry date. Full CRUD is supported.
 
-## Features
+## Features 
 
 - **Todo fields**: title, description, notes, expiry date
 - **CRUD**: Create, list, get one, update, delete
