@@ -64,7 +64,7 @@ frontend/
 
 ## API
 
-| Method | Path         | Description        |
+| Method | Path         | Description        | 
 |--------|--------------|--------------------|
 | GET    | /todos       | List all todos     | 
 | GET    | /todos/{id}  | Get one todo       |
