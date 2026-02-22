@@ -3,6 +3,7 @@
     "implementation": [
       {
         "How_is_it_connected_to_implementation": "Main UI component for managing todos. Handles listing, creating, editing, and deleting todos by invoking API methods and rendering todo fields (title, description, notes, expiry_date).",
+        "change_type": "unchanged",
         "file_path": "frontend/src/App.tsx",
         "id": "ui_todo_manager_component",
         "name": "App",
@@ -11,6 +12,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "UI form for creating and updating todos. Enforces required title, collects description, notes, and expiry_date, and passes data to parent handlers.",
+        "change_type": "unchanged",
         "file_path": "frontend/src/App.tsx",
         "id": "ui_todo_form_component",
         "name": "TodoForm",
@@ -19,6 +21,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "Provides frontend API methods for CRUD operations. Each method corresponds to a backend endpoint for todos.",
+        "change_type": "unchanged",
         "file_path": "frontend/src/api.ts",
         "id": "frontend_api_todo_methods",
         "name": "todoApi (list, get, create, update, delete)",
@@ -27,6 +30,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "Backend endpoint for listing all todos. Returns todos with all specified fields.",
+        "change_type": "unchanged",
         "file_path": "backend/main.py",
         "id": "backend_endpoint_list_todos",
         "name": "/todos (GET)",
@@ -35,6 +39,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "Backend endpoint for retrieving a single todo by ID. Returns all fields.",
+        "change_type": "unchanged",
         "file_path": "backend/main.py",
         "id": "backend_endpoint_get_todo",
         "name": "/todos/{todo_id} (GET)",
@@ -43,6 +48,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "Backend endpoint for creating a new todo. Requires title, accepts description, notes, expiry_date.",
+        "change_type": "unchanged",
         "file_path": "backend/main.py",
         "id": "backend_endpoint_create_todo",
         "name": "/todos (POST)",
@@ -51,6 +57,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "Backend endpoint for updating an existing todo. Accepts partial updates for all fields.",
+        "change_type": "unchanged",
         "file_path": "backend/main.py",
         "id": "backend_endpoint_update_todo",
         "name": "/todos/{todo_id} (PUT)",
@@ -59,6 +66,7 @@
       },
       {
         "How_is_it_connected_to_implementation": "Backend endpoint for deleting a todo by ID.",
+        "change_type": "unchanged",
         "file_path": "backend/main.py",
         "id": "backend_endpoint_delete_todo",
         "name": "/todos/{todo_id} (DELETE)",
